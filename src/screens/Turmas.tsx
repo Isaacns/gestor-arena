@@ -181,8 +181,11 @@ function CriarTurma({ profs, onClose, onSaved }: { profs: Professional[]; onClos
 }
 
 function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: () => void; onChange: () => Promise<void> }) {
-  const { org } = useAuth()
+  const { org, role } = useAuth()
   const toast = useToast()
+  // espelha os gates do backend: matricular/cancelar = pode_cadastrar_aluno; chamada = pode_gerir_escola ∪ recepção ∪ professor
+  const podeMatricular = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao'].includes(role ?? '')
+  const podeChamada = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao', 'professor'].includes(role ?? '')
   const [enr, setEnr] = useState<(Enrollment & { student: Student })[]>([])
   const [alunos, setAlunos] = useState<Student[]>([])
   const [sel, setSel] = useState('')
@@ -220,21 +223,21 @@ function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: ()
     <Modal title={turma.nome} onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{enr.length}/{turma.capacidade} matriculados</span>
-        <BtnSm onClick={() => setChamada(true)} disabled={enr.length === 0}>Fazer chamada</BtnSm>
+        {podeChamada && <BtnSm onClick={() => setChamada(true)} disabled={enr.length === 0}>Fazer chamada</BtnSm>}
       </div>
       {enr.length === 0 ? <p style={{ fontSize: 13, color: 'var(--tx3)', padding: '8px 0' }}>Nenhum aluno matriculado ainda.</p> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
           {enr.map((e) => (
             <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'var(--card2)', border: '1px solid var(--line)', borderRadius: 10 }}>
               <span style={{ fontSize: 14 }}>{e.student?.nome}</span>
-              <BtnSm danger onClick={() => void desmatricular(e.id, e.student?.nome)}>Remover</BtnSm>
+              {podeMatricular && <BtnSm danger onClick={() => void desmatricular(e.id, e.student?.nome)}>Remover</BtnSm>}
             </div>
           ))}
         </div>
       )}
-      {enr.length < turma.capacidade && (
+      {podeMatricular && enr.length < turma.capacidade && (
         <div style={{ display: 'flex', gap: 8 }}>
-          <select style={{ ...inp, flex: 1 }} value={sel} onChange={(e) => setSel(e.target.value)}>
+          <select style={{ ...inp, flex: 1 }} value={sel} onChange={(e) => setSel(e.target.value)} aria-label="Selecionar aluno para matricular">
             <option value="">Matricular aluno…</option>
             {disponiveis.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
           </select>

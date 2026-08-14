@@ -90,6 +90,11 @@ a { color: var(--brand); text-decoration: none; }
   .ga-side:not(.ga-drawer){ display:none; }
   .ga-ham{ display:flex; }
 }
+/* mobile: tabela não quebra o layout — rola na horizontal (cards por tela virão como refinamento) */
+@media (max-width:640px){
+  .ga-content table{ display:block; overflow-x:auto; white-space:nowrap; }
+  .ga-content thead, .ga-content tbody, .ga-content tr{ width:100%; }
+}
 
 /* agenda em grade */
 .ga-ag-top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
