@@ -60,6 +60,21 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 }
 export const inp: CSSProperties = { width: '100%', background: 'var(--bg2)', border: '1px solid var(--line2)', color: 'var(--tx)', borderRadius: 10, padding: '10px 12px', fontSize: 14, fontFamily: 'inherit' }
 
+/* Campo de senha com botão mostrar/ocultar (padrão VIZIO — todo campo de senha tem). */
+export function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [show, setShow] = useState(false)
+  return (
+    <div style={{ position: 'relative' }}>
+      <input {...props} type={show ? 'text' : 'password'} style={{ ...inp, paddingRight: 40, ...props.style }} />
+      <button type="button" onClick={() => setShow((s) => !s)} tabIndex={-1}
+        aria-label={show ? 'Ocultar senha' : 'Mostrar senha'} title={show ? 'Ocultar senha' : 'Mostrar senha'}
+        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 16, lineHeight: 1, padding: 4 }}>
+        {show ? '🙈' : '👁️'}
+      </button>
+    </div>
+  )
+}
+
 /* ---------- Badge / botões ---------- */
 export function Badge({ children, color }: { children: ReactNode; color: string }) {
   return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 20, color, background: color + '1F' }}>

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { sb } from '../lib/supabase'
+import { PasswordInput } from '../ui/kit'
 
 export default function Login() {
   const [modo, setModo] = useState<'entrar' | 'criar'>('entrar')
@@ -43,7 +44,7 @@ export default function Login() {
         {modo === 'entrar' ? (
           <form onSubmit={entrar}>
             <Field label="E-mail"><input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inp} /></Field>
-            <Field label="Senha"><input type="password" autoComplete="current-password" required value={senha} onChange={(e) => setSenha(e.target.value)} style={inp} /></Field>
+            <Field label="Senha"><PasswordInput autoComplete="current-password" required value={senha} onChange={(e) => setSenha(e.target.value)} /></Field>
             <button className="ga-btn" disabled={busy} type="submit">{busy ? 'Entrando…' : 'Entrar'}</button>
             <p style={rodape}>Primeira vez? <a href="#" onClick={(e) => { e.preventDefault(); setModo('criar') }}>Criar conta</a></p>
           </form>
@@ -51,7 +52,7 @@ export default function Login() {
           <form onSubmit={criar}>
             <Field label="Seu nome"><input required value={nome} onChange={(e) => setNome(e.target.value)} style={inp} /></Field>
             <Field label="E-mail"><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inp} /></Field>
-            <Field label="Senha (mín. 8)"><input type="password" required minLength={8} value={senha} onChange={(e) => setSenha(e.target.value)} style={inp} /></Field>
+            <Field label="Senha (mín. 8)"><PasswordInput required minLength={8} value={senha} onChange={(e) => setSenha(e.target.value)} /></Field>
             <button className="ga-btn" disabled={busy} type="submit">{busy ? 'Criando…' : 'Criar conta'}</button>
             <p style={rodape}>Já tem conta? <a href="#" onClick={(e) => { e.preventDefault(); setModo('entrar') }}>Entrar</a></p>
           </form>
