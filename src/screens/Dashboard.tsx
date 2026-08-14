@@ -138,7 +138,7 @@ export default function Dashboard() {
           <div className="ga-bars">
             {porHora.map((b) => (
               <div key={b.h} className="ga-bar" title={`${String(b.h).padStart(2, '0')}h · ${Math.round(b.pct * 100)}%`}>
-                <div className="ga-bar-fill" style={{ height: `${Math.max(4, b.pct * 100)}%`, background: b.pct > 0.66 ? 'var(--ok)' : b.pct > 0.33 ? 'var(--brand)' : 'var(--cyan)' }} />
+                <div className="ga-bar-track"><div className="ga-bar-fill" style={{ transform: `scaleY(${Math.max(0.04, b.pct)})`, background: b.pct > 0.66 ? 'var(--ok)' : b.pct > 0.33 ? 'var(--brand)' : 'var(--cyan)' }} /></div>
                 <span className="ga-bar-x">{String(b.h).padStart(2, '0')}</span>
               </div>
             ))}
