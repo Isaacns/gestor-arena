@@ -26,15 +26,15 @@ export function useNav() { return useContext(NavCtx) }
 
 type Nav = [id: string, ico: string, label: string]
 const NAV_ARENA: Nav[] = [
-  ['inicio', 'home', 'Visão Geral'], ['agenda', 'calendar', 'Agenda'], ['unidades', 'pin', 'Unidades'], ['quadras', 'grid', 'Quadras'],
-  ['parceiros', 'link', 'Parceiros'], ['clientes', 'users', 'Clientes'], ['financeiro', 'dollar', 'Financeiro'],
-  ['estoque', 'box', 'Estoque'], ['manutencao', 'wrench', 'Manutenção'], ['relatorios', 'chart', 'Relatórios'],
-  ['equipe', 'users', 'Equipe'], ['config', 'gear', 'Configurações'],
+  ['inicio', '🏠', 'Visão Geral'], ['agenda', '📅', 'Agenda'], ['unidades', '📍', 'Unidades'], ['quadras', '🥅', 'Quadras'],
+  ['parceiros', '🤝', 'Parceiros'], ['clientes', '🧑', 'Clientes'], ['financeiro', '💰', 'Financeiro'],
+  ['estoque', '📦', 'Estoque'], ['manutencao', '🔧', 'Manutenção'], ['relatorios', '📊', 'Relatórios'],
+  ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações'],
 ]
 const NAV_ESCOLA: Nav[] = [
-  ['inicio', 'home', 'Visão Geral'], ['agenda', 'calendar', 'Agenda'], ['alunos', 'cap', 'Alunos'], ['turmas', 'roster', 'Turmas'],
-  ['professores', 'user', 'Professores'], ['financeiro', 'dollar', 'Financeiro'], ['locais', 'pin', 'Locais'],
-  ['reposicoes', 'repeat', 'Reposições'], ['parceiros', 'link', 'Parceiros'], ['equipe', 'users', 'Equipe'], ['config', 'gear', 'Configurações'],
+  ['inicio', '🏠', 'Visão Geral'], ['agenda', '📅', 'Agenda'], ['alunos', '🎓', 'Alunos'], ['turmas', '🏐', 'Turmas'],
+  ['professores', '👤', 'Professores'], ['financeiro', '💰', 'Financeiro'], ['locais', '📍', 'Locais'],
+  ['reposicoes', '🔁', 'Reposições'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações'],
 ]
 
 // módulos das próximas ondas — tela on-brand que explica o módulo (menu já igual ao mockup)
@@ -57,7 +57,7 @@ function SideNav({ nav, view, onNavigate }: { nav: Nav[]; view: string; onNaviga
       <div style={{ padding: '0 8px', marginBottom: 18 }}><Logo /></div>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
         {nav.map(([id, ic, label]) => (
-          <button key={id} className={'ga-nav' + (view === id ? ' on' : '')} aria-current={view === id ? 'page' : undefined} onClick={() => onNavigate(id)}><span className="ga-nav-ic" aria-hidden><Icon name={ic} size={19} /></span>{label}</button>
+          <button key={id} className={'ga-nav' + (view === id ? ' on' : '')} aria-current={view === id ? 'page' : undefined} onClick={() => onNavigate(id)}><span className="ga-nav-ic" aria-hidden style={{ fontSize: 16 }}>{ic}</span>{label}</button>
         ))}
       </nav>
     </>
