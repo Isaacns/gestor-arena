@@ -40,9 +40,10 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 400, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 20, padding: '36px 32px', boxShadow: 'var(--card-shadow)' }}>
-        <div style={{ marginBottom: 22 }}><Logo size={38} /></div>
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20, position: 'relative' }}>
+      <div className="ga-aura" aria-hidden />
+      <div style={{ width: '100%', maxWidth: 400, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 20, padding: '36px 32px', boxShadow: 'var(--card-shadow)', position: 'relative', zIndex: 1 }}>
+        <div className="ga-float" style={{ marginBottom: 22, display: 'inline-flex' }}><Logo size={38} /></div>
         <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Bem-vindo</h1>
         <p style={{ color: 'var(--tx2)', fontSize: 13, margin: '4px 0 24px' }}>
           A gestão da sua arena e da sua escolinha, no mesmo lugar.

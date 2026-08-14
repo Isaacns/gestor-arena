@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type JSX } from
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { ToastHost } from './ui/kit'
 import { Logo, LogoMark } from './ui/Logo'
+import { Icon } from './ui/icons'
 import Login from './screens/Login'
 import Onboarding from './screens/Onboarding'
 import Dashboard from './screens/Dashboard'
@@ -25,15 +26,15 @@ export function useNav() { return useContext(NavCtx) }
 
 type Nav = [id: string, ico: string, label: string]
 const NAV_ARENA: Nav[] = [
-  ['inicio', '🏠', 'Visão Geral'], ['agenda', '📅', 'Agenda'], ['unidades', '📍', 'Unidades'], ['quadras', '🥅', 'Quadras'],
-  ['parceiros', '🤝', 'Parceiros'], ['clientes', '🧑', 'Clientes'], ['financeiro', '💰', 'Financeiro'],
-  ['estoque', '📦', 'Estoque'], ['manutencao', '🔧', 'Manutenção'], ['relatorios', '📊', 'Relatórios'],
-  ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações'],
+  ['inicio', 'home', 'Visão Geral'], ['agenda', 'calendar', 'Agenda'], ['unidades', 'pin', 'Unidades'], ['quadras', 'grid', 'Quadras'],
+  ['parceiros', 'link', 'Parceiros'], ['clientes', 'users', 'Clientes'], ['financeiro', 'dollar', 'Financeiro'],
+  ['estoque', 'box', 'Estoque'], ['manutencao', 'wrench', 'Manutenção'], ['relatorios', 'chart', 'Relatórios'],
+  ['equipe', 'users', 'Equipe'], ['config', 'gear', 'Configurações'],
 ]
 const NAV_ESCOLA: Nav[] = [
-  ['inicio', '🏠', 'Visão Geral'], ['agenda', '📅', 'Agenda'], ['alunos', '🎓', 'Alunos'], ['turmas', '🏐', 'Turmas'],
-  ['professores', '👤', 'Professores'], ['financeiro', '💰', 'Financeiro'], ['locais', '📍', 'Locais'],
-  ['reposicoes', '🔁', 'Reposições'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações'],
+  ['inicio', 'home', 'Visão Geral'], ['agenda', 'calendar', 'Agenda'], ['alunos', 'cap', 'Alunos'], ['turmas', 'roster', 'Turmas'],
+  ['professores', 'user', 'Professores'], ['financeiro', 'dollar', 'Financeiro'], ['locais', 'pin', 'Locais'],
+  ['reposicoes', 'repeat', 'Reposições'], ['parceiros', 'link', 'Parceiros'], ['equipe', 'users', 'Equipe'], ['config', 'gear', 'Configurações'],
 ]
 
 // módulos das próximas ondas — tela on-brand que explica o módulo (menu já igual ao mockup)
@@ -56,7 +57,7 @@ function SideNav({ nav, view, onNavigate }: { nav: Nav[]; view: string; onNaviga
       <div style={{ padding: '0 8px', marginBottom: 18 }}><Logo /></div>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
         {nav.map(([id, ic, label]) => (
-          <button key={id} className={'ga-nav' + (view === id ? ' on' : '')} aria-current={view === id ? 'page' : undefined} onClick={() => onNavigate(id)}><span aria-hidden>{ic}</span>{label}</button>
+          <button key={id} className={'ga-nav' + (view === id ? ' on' : '')} aria-current={view === id ? 'page' : undefined} onClick={() => onNavigate(id)}><span className="ga-nav-ic" aria-hidden><Icon name={ic} size={19} /></span>{label}</button>
         ))}
       </nav>
     </>
@@ -93,7 +94,7 @@ function Notificacoes() {
   }, [open])
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button type="button" className="ga-iconbtn" onClick={() => setOpen((o) => !o)} aria-label="Notificações" title="Notificações">🔔</button>
+      <button type="button" className="ga-iconbtn" onClick={() => setOpen((o) => !o)} aria-label="Notificações" title="Notificações"><Icon name="bell" size={18} /></button>
       {open && (
         <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', width: 260, background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 14, zIndex: 40 }}>
           <b style={{ fontSize: 13 }}>Notificações</b>
@@ -162,6 +163,7 @@ function Shell() {
   return (
     <NavCtx.Provider value={navegar}>
       <div className="ga-shell">
+        <div className="ga-aura" aria-hidden />
         <aside className="ga-side"><SideNav nav={nav} view={viewValida} onNavigate={navegar} /></aside>
         {drawer && (
           <div className="ga-drawer-bg" onClick={() => setDrawer(false)}>
@@ -175,7 +177,7 @@ function Shell() {
           <header className="ga-top">
             <button type="button" className="ga-ham" onClick={() => setDrawer(true)} aria-label="Abrir menu" title="Menu">☰</button>
             <div className="ga-topbar-org ga-hide-mob"><OrgSwitcher /></div>
-            <label className="ga-search"><span aria-hidden>🔎</span>
+            <label className="ga-search"><span aria-hidden style={{ display: 'flex', color: 'var(--tx3)' }}><Icon name="search" size={16} /></span>
               <input value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') buscar() }} placeholder="Buscar…" aria-label="Buscar" />
             </label>
             <div style={{ flex: 1 }} />
