@@ -214,9 +214,23 @@ function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: ()
 function Chamada({ turma, enr, onClose }: { turma: ClassRow; enr: (Enrollment & { student: Student })[]; onClose: () => void }) {
   const toast = useToast()
   const [data, setData] = useState(isoLocal(new Date()))
-  const [marc, setMarc] = useState<Record<string, PresencaStatus>>(() =>
-    Object.fromEntries(enr.map((e) => [e.student_id, 'presente'] as [string, PresencaStatus])))
+  const [marc, setMarc] = useState<Record<string, PresencaStatus>>({})
+  const [jaReg, setJaReg] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  // ao abrir / trocar a data, carrega a presença já registrada (evita sobrescrever em silêncio)
+  useEffect(() => {
+    let vivo = true
+    ;(async () => {
+      const { data: att } = await sb.from('attendance').select('student_id, status').eq('class_id', turma.id).eq('data', data)
+      if (!vivo) return
+      const prev: Record<string, PresencaStatus> = {}
+      ;(att ?? []).forEach((a: { student_id: string; status: PresencaStatus }) => { prev[a.student_id] = a.status })
+      setJaReg((att ?? []).length > 0)
+      setMarc(Object.fromEntries(enr.map((e) => [e.student_id, prev[e.student_id] ?? 'presente'] as [string, PresencaStatus])))
+    })()
+    return () => { vivo = false }
+  }, [data, turma.id])
 
   async function salvar() {
     setBusy(true)
@@ -224,12 +238,13 @@ function Chamada({ turma, enr, onClose }: { turma: ClassRow; enr: (Enrollment & 
     const { error } = await sb.rpc('registrar_chamada', { p_class: turma.id, p_data: data, p_itens: itens })
     setBusy(false)
     if (error) { toast(errMsg(error), true); return }
-    toast('Chamada registrada.'); onClose()
+    toast(jaReg ? 'Chamada atualizada.' : 'Chamada registrada.'); onClose()
   }
 
   return (
     <Modal title={'Chamada — ' + turma.nome} onClose={onClose}>
       <Field label="Data da aula"><input style={inp} type="date" value={data} onChange={(e) => setData(e.target.value)} /></Field>
+      {jaReg && <p role="status" style={{ fontSize: 12, color: 'var(--warn)', margin: '-8px 0 12px' }}>Já existe chamada nesta data — salvar vai atualizá-la.</p>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '6px 0 4px' }}>
         {enr.map((e) => (
           <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -249,7 +264,7 @@ function Chamada({ turma, enr, onClose }: { turma: ClassRow; enr: (Enrollment & 
       </div>
       <Foot>
         <BtnGhost onClick={onClose}>Cancelar</BtnGhost>
-        <button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void salvar()}>{busy ? 'Salvando…' : 'Registrar chamada'}</button>
+        <button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void salvar()}>{busy ? 'Salvando…' : jaReg ? 'Atualizar chamada' : 'Registrar chamada'}</button>
       </Foot>
     </Modal>
   )
