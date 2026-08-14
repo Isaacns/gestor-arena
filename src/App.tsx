@@ -20,6 +20,7 @@ import Professores from './screens/Professores'
 import Locais from './screens/Locais'
 import EmBreve from './screens/EmBreve'
 import Bloquear from './screens/Bloquear'
+import AceitarConvite from './screens/AceitarConvite'
 
 /* ---------- navegação entre telas (para CTAs e sub-telas) ---------- */
 const NavCtx = createContext<(id: string) => void>(() => {})
@@ -207,5 +208,14 @@ function Gate() {
 }
 
 export default function App() {
-  return <ToastHost><AuthProvider><Gate /></AuthProvider></ToastHost>
+  const convite = new URLSearchParams(window.location.search).get('convite')
+  return (
+    <ToastHost>
+      <AuthProvider>
+        {convite
+          ? <AceitarConvite token={convite} onDone={() => { window.history.replaceState({}, '', window.location.pathname); window.location.reload() }} />
+          : <Gate />}
+      </AuthProvider>
+    </ToastHost>
+  )
 }

@@ -13,6 +13,7 @@ export default function Equipe() {
   const [loading, setLoading] = useState(true)
   const [lista, setLista] = useState<MembershipRow[]>([])
   const [add, setAdd] = useState(false)
+  const [link, setLink] = useState(false)
   const [editar, setEditar] = useState<MembershipRow | null>(null)
   const podeAdmin = ['owner', 'admin'].includes(role ?? '')
 
@@ -37,7 +38,10 @@ export default function Equipe() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
         <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{lista.length} pessoa(s)</span>
-        {podeAdmin && <button className="ga-btn" style={{ width: 'auto', marginLeft: 'auto' }} onClick={() => setAdd(true)}>Adicionar pessoa</button>}
+        {podeAdmin && <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+          <BtnSm onClick={() => setLink(true)}>🔗 Convidar por link</BtnSm>
+          <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setAdd(true)}>Adicionar pessoa</button>
+        </div>}
       </div>
       <div className="ga-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? <Loading /> : (
@@ -60,6 +64,7 @@ export default function Equipe() {
         )}
       </div>
       {add && <AddMembro onClose={() => setAdd(false)} onSaved={() => { setAdd(false); void carregar() }} />}
+      {link && <ConvidarLink onClose={() => setLink(false)} />}
       {editar && <EditarPapel membro={editar} onClose={() => setEditar(null)} onSaved={() => { setEditar(null); void carregar() }} />}
     </div>
   )
@@ -101,6 +106,46 @@ function EditarPapel({ membro, onClose, onSaved }: { membro: MembershipRow; onCl
     <Modal title={`Papel de ${membro.profiles?.nome ?? 'membro'}`} onClose={onClose}>
       <Field label="Papel"><select style={inp} value={papel} onChange={(e) => setPapel(e.target.value as AppRole)}>{PAPEIS.map((p) => <option key={p} value={p}>{ROTULO[p]}</option>)}</select></Field>
       <Foot><BtnGhost onClick={onClose}>Cancelar</BtnGhost><button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void salvar()}>Salvar</button></Foot>
+    </Modal>
+  )
+}
+function ConvidarLink({ onClose }: { onClose: () => void }) {
+  const { org } = useAuth(); const toast = useToast()
+  const [papel, setPapel] = useState<AppRole>('admin')
+  const [email, setEmail] = useState('')
+  const [link, setLink] = useState('')
+  const [busy, setBusy] = useState(false)
+  async function gerar() {
+    if (!org) return
+    setBusy(true)
+    const { data, error } = await sb.rpc('criar_convite', { p_org: org.id, p_role: papel, p_email: email.trim() || null, p_expira_dias: 14 })
+    setBusy(false)
+    if (error) return toast(errMsg(error), true)
+    setLink(`${window.location.origin}/?convite=${data}`)
+  }
+  return (
+    <Modal title="Convidar por link" onClose={onClose}>
+      <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 4 }}>
+        Gere um link de acesso para <b>{org?.nome}</b>. Quem abrir define a senha e entra <b>só nesta organização</b>.
+      </p>
+      {!link ? (
+        <>
+          <Field label="Papel de acesso"><select style={inp} value={papel} onChange={(e) => setPapel(e.target.value as AppRole)}>
+            {(['owner', ...PAPEIS] as AppRole[]).map((p) => <option key={p} value={p}>{ROTULO[p]}</option>)}
+          </select></Field>
+          <Field label="Restringir a um e-mail (opcional)"><input style={inp} type="email" placeholder="deixe vazio para link aberto" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+          <Foot><BtnGhost onClick={onClose}>Cancelar</BtnGhost><button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void gerar()}>{busy ? 'Gerando…' : 'Gerar link'}</button></Foot>
+        </>
+      ) : (
+        <>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+            <code style={{ flex: 1, minWidth: 0, background: 'var(--bg2)', border: '1px dashed var(--line2)', borderRadius: 8, padding: '9px 12px', fontSize: 12, color: 'var(--brand)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link}</code>
+            <BtnSm onClick={() => { navigator.clipboard?.writeText(link); toast('Link copiado.') }}>Copiar</BtnSm>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 10 }}>Válido por 14 dias e de uso único. Envie por WhatsApp/e-mail para a pessoa.</p>
+          <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Concluir</button></Foot>
+        </>
+      )}
     </Modal>
   )
 }
