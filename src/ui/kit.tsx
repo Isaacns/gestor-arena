@@ -34,15 +34,22 @@ export function errMsg(e: unknown): string {
 }
 
 /* ---------- Modal ---------- */
+// pilha global: com modais aninhados (ex.: Gerir turma → Chamada) só o do topo trata Escape/Tab
+const modalStack: symbol[] = []
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const titleId = useId()
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
   useEffect(() => {
+    const meuId = Symbol('modal')
+    modalStack.push(meuId)   // ordem do stack = ordem de montagem (empilha por cima)
     const anterior = document.activeElement as HTMLElement | null
     const el = ref.current
     el?.querySelector<HTMLElement>('input,select,textarea,button')?.focus()
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { onClose(); return }
+      if (modalStack[modalStack.length - 1] !== meuId) return   // só o topo responde
+      if (e.key === 'Escape') { onCloseRef.current(); return }
       if (e.key === 'Tab' && el) {
         const f = el.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')
         if (!f.length) return
@@ -52,8 +59,12 @@ export function Modal({ title, children, onClose }: { title: string; children: R
       }
     }
     document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); anterior?.focus?.() }
-  }, [onClose])
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      const i = modalStack.indexOf(meuId); if (i >= 0) modalStack.splice(i, 1)
+      anterior?.focus?.()
+    }
+  }, [])
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(7,28,54,.45)', zIndex: 60, display: 'grid', placeItems: 'center', padding: 18 }}>

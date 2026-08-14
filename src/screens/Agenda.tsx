@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import type { AgendaQuadra, AgendaReserva, ReservaTipo } from '../lib/database.types'
-import { BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
+import { BtnGhost, BtnSm, Empty, ErroCarregar, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
 const H_INI = 6, H_FIM = 22
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -25,6 +25,7 @@ export default function Agenda() {
   const toast = useToast()
   const [dayOff, setDayOff] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState(false)
   const [quadras, setQuadras] = useState<AgendaQuadra[]>([])
   const [reservas, setReservas] = useState<AgendaReserva[]>([])
   const [nova, setNova] = useState<{ court?: string; hora?: string } | null>(null)
@@ -38,10 +39,10 @@ export default function Agenda() {
   async function carregar() {
     if (!org) return
     const meu = ++cargaRef.current   // descarta respostas de cargas anteriores (troca rápida de dia/org)
-    setLoading(true)
+    setLoading(true); setErro(false)
     const { data: qs, error } = await sb.rpc('agenda_quadras', { p_org: org.id })
     if (meu !== cargaRef.current) return
-    if (error) toast(errMsg(error), true)
+    if (error) { toast(errMsg(error), true); setErro(true); setLoading(false); return }
     const qd = (qs as AgendaQuadra[]) ?? []
     setQuadras(qd)
     if (qd.length) {
@@ -66,6 +67,7 @@ export default function Agenda() {
 
   const rotulo = `${DIAS_LONGO[dia.getDay()]}, ${dia.getDate()} de ${MESES[dia.getMonth()]} de ${dia.getFullYear()}`
 
+  if (!loading && erro) return <div className="ga-card"><ErroCarregar onRetry={() => void carregar()} texto="Não foi possível carregar a agenda." /></div>
   if (!loading && quadras.length === 0) {
     const ehArena = org?.tipo === 'arena'
     return <div className="ga-card"><Empty ico="📅" titulo="Sua agenda ainda não tem quadras"
@@ -169,7 +171,8 @@ function ReservaModal({ quadras, data, nova, abrir, podeAgenda, onClose, onSaved
 
   async function salvar() {
     if (!org) return
-    if (fim <= ini) { toast('O horário de fim deve ser depois do início.', true); return }
+    // fim<ini é permitido (vira o dia — o backend materializa +1 dia e limita a 18h); só bloqueia duração zero
+    if (fim === ini) { toast('O início e o fim não podem ser iguais.', true); return }
     setBusy(true)
     let error
     if (editando && abrir) {

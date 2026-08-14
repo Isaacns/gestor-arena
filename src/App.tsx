@@ -25,8 +25,8 @@ const TELAS: Record<string, () => JSX.Element> = {
   unidades: Unidades, quadras: Quadras, parceiros: Parceiros, equipe: Equipe, config: Config,
 }
 
-function SideNav({ nav, view, onNavigate, onNovaOrg }: {
-  nav: Nav[]; view: string; onNavigate: (id: string) => void; onNovaOrg: () => void
+function SideNav({ nav, view, onNavigate, onNovaOrg, onOrgChange }: {
+  nav: Nav[]; view: string; onNavigate: (id: string) => void; onNovaOrg: () => void; onOrgChange?: () => void
 }) {
   const { org, orgs, setOrg } = useAuth()
   return (
@@ -34,7 +34,7 @@ function SideNav({ nav, view, onNavigate, onNovaOrg }: {
       <div className="ga-logo" style={{ padding: '0 8px', marginBottom: 16 }}><span className="mark">A</span><b>Gestor Arena</b></div>
       {orgs.length > 0 && (
         <div style={{ display: 'flex', gap: 6, margin: '0 4px 12px' }}>
-          <select value={org?.id} onChange={(e) => setOrg(e.target.value)} aria-label="Organização atual"
+          <select value={org?.id} onChange={(e) => { setOrg(e.target.value); onOrgChange?.() }} aria-label="Organização atual"
             style={{ flex: 1, minWidth: 0, padding: '9px 10px', borderRadius: 10, background: 'rgba(255,255,255,.06)', color: '#fff', border: '1px solid rgba(255,255,255,.12)', fontSize: 13 }}>
             {orgs.map((o) => <option key={o.org.id} value={o.org.id} style={{ color: '#000' }}>{o.org.nome} · {o.org.tipo}</option>)}
           </select>
@@ -93,8 +93,9 @@ function Shell() {
   const nav = org?.tipo === 'arena' ? NAV_ARENA : NAV_ESCOLA
   const nome = (user?.user_metadata?.nome as string | undefined) ?? user?.email ?? ''
 
-  // ao trocar de organização, volta para Início (evita renderizar tela de Arena numa Escola e header em branco)
-  useEffect(() => { setView('inicio') }, [org?.id])
+  // ao trocar de organização, volta para Início já NESTE render (sem flash da tela anterior nem fetch inútil)
+  const [orgAnterior, setOrgAnterior] = useState(org?.id)
+  if (org?.id !== orgAnterior) { setOrgAnterior(org?.id); setView('inicio') }
   const viewValida = nav.some((n) => n[0] === view) ? view : 'inicio'
   const Tela = TELAS[viewValida] ?? Dashboard
 
@@ -109,7 +110,7 @@ function Shell() {
       {drawer && (
         <div className="ga-drawer-bg" onClick={() => setDrawer(false)}>
           <aside className="ga-side ga-drawer" onClick={(e) => e.stopPropagation()}>
-            <SideNav nav={nav} view={viewValida} onNavigate={navegar} onNovaOrg={() => { setDrawer(false); setNovaOrg(true) }} />
+            <SideNav nav={nav} view={viewValida} onNavigate={navegar} onNovaOrg={() => { setDrawer(false); setNovaOrg(true) }} onOrgChange={() => setDrawer(false)} />
           </aside>
         </div>
       )}
