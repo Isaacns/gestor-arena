@@ -1,84 +1,15 @@
-<!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gestor Arena</title>
-<meta name="description" content="Gestor Arena — a plataforma de gestão do ecossistema de arenas esportivas. Um produto VIZIO.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/brand.css?v=023">
-</head>
-<body>
-
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="brandmark"><div class="dot">GA</div>
-      <b style="font-family:var(--display)">Gestor Arena</b></div>
-    <h1>Bem-vindo</h1>
-    <p class="sub">A gestão da sua arena e da sua escolinha, no mesmo lugar.</p>
-
-    <form id="form-entrar" onsubmit="return GA.entrar(event)">
-      <label class="f"><span>E-mail</span>
-        <input id="lg-email" type="email" autocomplete="email" required></label>
-      <label class="f"><span>Senha</span>
-        <input id="lg-senha" type="password" autocomplete="current-password" required></label>
-      <button class="b" id="lg-btn" type="submit" style="width:100%">Entrar</button>
-      <p style="margin-top:14px;font-size:13px;color:var(--tx2);text-align:center">
-        Primeira vez aqui? <a href="#" onclick="GA.mostrarAbaLogin('criar');return false">Criar conta</a></p>
-    </form>
-
-    <form id="form-criar" style="display:none" onsubmit="return GA.criarConta(event)">
-      <label class="f"><span>Seu nome</span>
-        <input id="cd-nome" autocomplete="name" required></label>
-      <label class="f"><span>E-mail</span>
-        <input id="cd-email" type="email" autocomplete="email" required></label>
-      <label class="f"><span>Senha (mín. 8 caracteres)</span>
-        <input id="cd-senha" type="password" autocomplete="new-password" minlength="8" required></label>
-      <button class="b" id="cd-btn" type="submit" style="width:100%">Criar conta</button>
-      <p style="margin-top:14px;font-size:13px;color:var(--tx2);text-align:center">
-        Já tem conta? <a href="#" onclick="GA.mostrarAbaLogin('entrar');return false">Entrar</a></p>
-    </form>
-  </div>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <aside class="sidebar" id="sidebar">
-    <div class="brandmark"><div class="dot">GA</div><b>Gestor Arena</b></div>
-    <div class="org-switch" id="org-switch" role="button" tabindex="0"
-         title="Trocar de espaço de trabalho"></div>
-    <nav id="nav" aria-label="Navegação principal"></nav>
-    <div class="spacer"></div>
-    <button type="button" class="nav-it" onclick="GA.sair()"><span aria-hidden="true">🚪</span>Sair</button>
-  </aside>
-  <div id="side-bg" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('on')"></div>
-
-  <div class="main">
-    <header class="topbar" id="topbar">
-      <button type="button" class="b-sm" id="menu-btn" aria-label="Abrir menu"
-        onclick="document.getElementById('sidebar').classList.add('open');document.getElementById('side-bg').classList.add('on')">☰</button>
-      <h2 id="view-title"></h2>
-      <button type="button" class="theme-btn" id="theme-btn" aria-label="Alternar tema"
-        onclick="GA.alternarTema()">☀️</button>
-      <div class="user" id="user-chip" role="button" tabindex="0"
-           title="Meu perfil"></div>
-    </header>
-    <main class="content" id="content"></main>
-  </div>
-</div>
-
-<div id="toasts" aria-live="polite"></div>
-
-<!-- §14.2: versão declarada UMA vez, no HTML — é a que o VersionGate lê e a tela "Sobre" exibe -->
-<script>window.APP_VERSION='0.2.0';</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="assets/config.js?v=023"></script>
-<script src="assets/core.js?v=023"></script>
-<script src="assets/auth.js?v=023"></script>
-<script src="assets/views.js?v=023"></script>
-<script src="assets/agenda.js?v=023"></script>
-<script>GA.boot();</script>
-</body>
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestor Arena</title>
+    <meta name="description" content="Gestor Arena — a plataforma de gestão do ecossistema de arenas esportivas. Um produto VIZIO." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
