@@ -12,6 +12,8 @@ const PRESENCA: { v: PresencaStatus; label: string; cor: string }[] = [
   { v: 'reposicao', label: 'Reposição', cor: '#0284C7' },
 ]
 function hhmm(t?: string | null) { return (t ?? '').slice(0, 5) }
+// data local (não UTC): toISOString viraria o dia após 21h no Brasil (UTC-3)
+function isoLocal(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 
 export default function Turmas() {
   const { org, role } = useAuth()
@@ -51,7 +53,7 @@ export default function Turmas() {
       </div>
 
       {loading ? <div className="ga-card"><Loading /></div> : turmas.length === 0 ? (
-        <div className="ga-card"><Empty ico="🏐" titulo="Nenhuma turma" texto="Crie turmas com professor, capacidade e horário. Se a turma usa uma quadra de arena parceira, a reserva entra na agenda automaticamente.">
+        <div className="ga-card"><Empty ico="🏐" titulo="Nenhuma turma" texto="Crie turmas com professor, capacidade, dias e horário. Depois matricule alunos e faça a chamada.">
           {podeGerir && <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setCriar(true)}>Criar turma</button>}
         </Empty></div>
       ) : (
@@ -168,7 +170,8 @@ function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: ()
     if (error) { toast(errMsg(error), true); return }
     toast('Aluno matriculado.'); setSel(''); await carregar(); await onChange()
   }
-  async function desmatricular(id: string) {
+  async function desmatricular(id: string, nome?: string) {
+    if (!confirm(`Remover ${nome ?? 'este aluno'} da turma? A matrícula será cancelada.`)) return
     const { error } = await sb.rpc('cancelar_matricula', { p_enrollment: id })
     if (error) { toast(errMsg(error), true); return }
     toast('Matrícula cancelada.'); await carregar(); await onChange()
@@ -188,7 +191,7 @@ function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: ()
           {enr.map((e) => (
             <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'var(--card2)', border: '1px solid var(--line)', borderRadius: 10 }}>
               <span style={{ fontSize: 14 }}>{e.student?.nome}</span>
-              <BtnSm danger onClick={() => void desmatricular(e.id)}>Remover</BtnSm>
+              <BtnSm danger onClick={() => void desmatricular(e.id, e.student?.nome)}>Remover</BtnSm>
             </div>
           ))}
         </div>
@@ -210,8 +213,7 @@ function GerirTurma({ turma, onClose, onChange }: { turma: ClassRow; onClose: ()
 
 function Chamada({ turma, enr, onClose }: { turma: ClassRow; enr: (Enrollment & { student: Student })[]; onClose: () => void }) {
   const toast = useToast()
-  const hoje = new Date().toISOString().slice(0, 10)
-  const [data, setData] = useState(hoje)
+  const [data, setData] = useState(isoLocal(new Date()))
   const [marc, setMarc] = useState<Record<string, PresencaStatus>>(() =>
     Object.fromEntries(enr.map((e) => [e.student_id, 'presente'] as [string, PresencaStatus])))
   const [busy, setBusy] = useState(false)

@@ -25,8 +25,9 @@ export default function Equipe() {
   }
   useEffect(() => { void carregar() }, [org])
 
-  async function remover(userId: string) {
+  async function remover(userId: string, quem?: string) {
     if (!org) return
+    if (!confirm(`Remover ${quem ?? 'esta pessoa'} da equipe? Ela perde o acesso a esta organização.`)) return
     const { error } = await sb.rpc('remover_membro', { p_org: org.id, p_user: userId })
     if (error) return toast(errMsg(error), true)
     toast('Acesso removido.'); void carregar()
@@ -50,7 +51,7 @@ export default function Equipe() {
                 <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                   {podeAdmin && m.user_id !== user?.id && m.role !== 'owner' && <>
                     <BtnSm onClick={() => setEditar(m)} style={{ marginRight: 6 }}>Papel</BtnSm>
-                    <BtnSm danger onClick={() => void remover(m.user_id)}>Remover</BtnSm>
+                    <BtnSm danger onClick={() => void remover(m.user_id, m.profiles?.nome ?? m.profiles?.email ?? undefined)}>Remover</BtnSm>
                   </>}
                 </td>
               </tr>

@@ -26,6 +26,8 @@ export default function Parceiros() {
   useEffect(() => { void carregar() }, [org])
 
   async function responder(id: string, acao: 'aceitar' | 'recusar' | 'encerrar') {
+    if (acao === 'encerrar' && !confirm('Encerrar esta parceria? As reservas futuras compartilhadas serão canceladas e a agenda deixa de conversar.')) return
+    if (acao === 'recusar' && !confirm('Recusar este convite de parceria?')) return
     const { error } = await sb.rpc('responder_vinculo', { p_link: id, p_acao: acao })
     if (error) return toast(errMsg(error), true)
     toast(acao === 'aceitar' ? 'Parceria ativa! 🎉' : 'Feito.'); void carregar()

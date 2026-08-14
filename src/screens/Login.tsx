@@ -3,13 +3,15 @@ import { sb } from '../lib/supabase'
 import { PasswordInput } from '../ui/kit'
 
 export default function Login() {
-  const [modo, setModo] = useState<'entrar' | 'criar'>('entrar')
+  const [modo, setModo] = useState<'entrar' | 'criar' | 'recuperar'>('entrar')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+
+  function irPara(m: 'entrar' | 'criar' | 'recuperar') { setErro(null); setMsg(null); setModo(m) }
 
   async function entrar(e: FormEvent) {
     e.preventDefault(); setErro(null); setBusy(true)
@@ -26,6 +28,15 @@ export default function Login() {
     if (error) { setErro(error.message); return }
     if (!data.session) { setMsg('Conta criada! Confirme pelo e-mail e depois entre.'); setModo('entrar') }
   }
+  async function recuperar(e: FormEvent) {
+    e.preventDefault(); setErro(null); setMsg(null)
+    if (!email) { setErro('Informe seu e-mail.'); return }
+    setBusy(true)
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+    setBusy(false)
+    if (error) { setErro(error.message); return }
+    setMsg('Se este e-mail tiver conta, enviamos um link para redefinir a senha. Depois de entrar, troque a senha em "Meu perfil".')
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20 }}>
@@ -41,20 +52,29 @@ export default function Login() {
         {erro && <div role="alert" style={box('var(--danger)')}>{erro}</div>}
         {msg && <div role="status" style={box('var(--ok)')}>{msg}</div>}
 
-        {modo === 'entrar' ? (
+        {modo === 'entrar' && (
           <form onSubmit={entrar}>
             <Field label="E-mail"><input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inp} /></Field>
             <Field label="Senha"><PasswordInput autoComplete="current-password" required value={senha} onChange={(e) => setSenha(e.target.value)} /></Field>
             <button className="ga-btn" disabled={busy} type="submit">{busy ? 'Entrando…' : 'Entrar'}</button>
-            <p style={rodape}>Primeira vez? <a href="#" onClick={(e) => { e.preventDefault(); setModo('criar') }}>Criar conta</a></p>
+            <p style={rodape}><a href="#" onClick={(e) => { e.preventDefault(); irPara('recuperar') }}>Esqueci minha senha</a></p>
+            <p style={rodape}>Primeira vez? <a href="#" onClick={(e) => { e.preventDefault(); irPara('criar') }}>Criar conta</a></p>
           </form>
-        ) : (
+        )}
+        {modo === 'criar' && (
           <form onSubmit={criar}>
             <Field label="Seu nome"><input required value={nome} onChange={(e) => setNome(e.target.value)} style={inp} /></Field>
             <Field label="E-mail"><input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inp} /></Field>
             <Field label="Senha (mín. 8)"><PasswordInput required minLength={8} value={senha} onChange={(e) => setSenha(e.target.value)} /></Field>
             <button className="ga-btn" disabled={busy} type="submit">{busy ? 'Criando…' : 'Criar conta'}</button>
-            <p style={rodape}>Já tem conta? <a href="#" onClick={(e) => { e.preventDefault(); setModo('entrar') }}>Entrar</a></p>
+            <p style={rodape}>Já tem conta? <a href="#" onClick={(e) => { e.preventDefault(); irPara('entrar') }}>Entrar</a></p>
+          </form>
+        )}
+        {modo === 'recuperar' && (
+          <form onSubmit={recuperar}>
+            <Field label="E-mail"><input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} style={inp} /></Field>
+            <button className="ga-btn" disabled={busy} type="submit">{busy ? 'Enviando…' : 'Enviar link de redefinição'}</button>
+            <p style={rodape}>Lembrou? <a href="#" onClick={(e) => { e.preventDefault(); irPara('entrar') }}>Voltar para entrar</a></p>
           </form>
         )}
       </div>

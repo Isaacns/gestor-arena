@@ -20,7 +20,7 @@
 :root {
   --bg: #F8FAFC; --bg2: #EFF3F9; --card: #FFFFFF; --card2: #F8FAFC;
   --line: #E2E8F0; --line2: #CBD5E1;
-  --tx: #0F172A; --tx2: #475569; --tx3: #94A3B8;
+  --tx: #0F172A; --tx2: #475569; --tx3: #64748B;
   --navy: #071C36; --brand: #1769FF; --brand-deep: #0F52D9; --cyan: #38BDF8;
   --ok: #16A34A; --warn: #F59E0B; --danger: #DC2626;
   --card-shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.05);
@@ -42,6 +42,7 @@ body {
 * { scrollbar-width: none; }
 *::-webkit-scrollbar { display: none; }
 a { color: var(--brand); text-decoration: none; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
 
 /* logo "A" geométrico */
 .ga-logo { display:inline-flex; align-items:center; gap:10px; }
@@ -74,7 +75,20 @@ a { color: var(--brand); text-decoration: none; }
 .ga-content { padding:24px 26px; max-width:1100px; width:100%; }
 .ga-card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius-card); box-shadow:var(--card-shadow); padding:20px; }
 .ga-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
-@media (max-width:860px){ .ga-shell{ grid-template-columns:1fr; } .ga-side{ display:none; } }
+
+/* menu do usuário (topo direito) */
+.ga-menuitem { display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding:9px 11px; border:none; background:none; border-radius:8px; cursor:pointer; font-size:13px; color:var(--tx); font-family:inherit; }
+.ga-menuitem:hover { background:var(--bg2); }
+
+/* hambúrguer + drawer mobile */
+.ga-ham { display:none; align-items:center; justify-content:center; width:38px; height:38px; border:1px solid var(--line2); background:var(--card); border-radius:10px; cursor:pointer; font-size:18px; color:var(--tx); flex:none; }
+.ga-drawer-bg { position:fixed; inset:0; background:rgba(7,28,54,.45); z-index:70; }
+.ga-drawer { position:fixed; left:0; top:0; height:100vh; width:264px; z-index:71; box-shadow:0 10px 40px rgba(0,0,0,.35); }
+@media (max-width:860px){
+  .ga-shell{ grid-template-columns:1fr; }
+  .ga-side:not(.ga-drawer){ display:none; }
+  .ga-ham{ display:flex; }
+}
 
 /* agenda em grade */
 .ga-ag-top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }

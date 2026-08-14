@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import type { AgendaQuadra, AgendaReserva, ReservaTipo } from '../lib/database.types'
@@ -34,15 +34,19 @@ export default function Agenda() {
   const dia = useMemo(() => addDias(new Date(), dayOff), [dayOff])
   const chave = iso(dia)
 
+  const cargaRef = useRef(0)
   async function carregar() {
     if (!org) return
+    const meu = ++cargaRef.current   // descarta respostas de cargas anteriores (troca rápida de dia/org)
     setLoading(true)
     const { data: qs, error } = await sb.rpc('agenda_quadras', { p_org: org.id })
+    if (meu !== cargaRef.current) return
     if (error) toast(errMsg(error), true)
     const qd = (qs as AgendaQuadra[]) ?? []
     setQuadras(qd)
     if (qd.length) {
       const { data: rs } = await sb.rpc('agenda_reservas', { p_org: org.id, p_court_ids: qd.map((q) => q.court_id), p_de: chave, p_ate: chave })
+      if (meu !== cargaRef.current) return
       setReservas((rs as AgendaReserva[]) ?? [])
     } else setReservas([])
     setLoading(false)
@@ -165,7 +169,7 @@ function ReservaModal({ quadras, data, nova, abrir, podeAgenda, onClose, onSaved
 
   async function salvar() {
     if (!org) return
-    if (fim === ini) { toast('Informe início e fim.', true); return }
+    if (fim <= ini) { toast('O horário de fim deve ser depois do início.', true); return }
     setBusy(true)
     let error
     if (editando && abrir) {
@@ -174,7 +178,10 @@ function ReservaModal({ quadras, data, nova, abrir, podeAgenda, onClose, onSaved
       if (!dias.length) { toast('Escolha ao menos um dia.', true); setBusy(false); return }
       const { data: r, error: e } = await sb.rpc('criar_reserva_recorrente', { p_org: org.id, p_court: court, p_dias: dias, p_inicio: ini, p_fim: fim, p_tipo: tipo, p_titulo: tit, p_vig_inicio: d, p_vig_fim: ate || null, p_horizonte_dias: 120 })
       error = e
-      if (!e && r) toast(`Recorrência criada: ${(r as { criadas: number }).criadas} reserva(s).`)
+      if (!e && r) {
+        const rr = r as { criadas: number; puladas: number }
+        toast(`Recorrência: ${rr.criadas} reserva(s) criada(s)${rr.puladas ? `, ${rr.puladas} pulada(s) por conflito` : ''}.`)
+      }
     } else {
       ({ error } = await sb.rpc('criar_reserva', { p_org: org.id, p_court: court, p_data: d, p_inicio: ini, p_fim: fim, p_tipo: tipo, p_titulo: tit, p_obs: null }))
     }

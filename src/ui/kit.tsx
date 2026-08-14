@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode, type CSSProperties } from 'react'
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode, type CSSProperties } from 'react'
 
 /* ---------- Toast ---------- */
 type Toast = { id: number; msg: string; err?: boolean }
@@ -16,7 +16,7 @@ export function ToastHost({ children }: { children: ReactNode }) {
       {children}
       <div style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 90, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 360 }}>
         {items.map((t) => (
-          <div key={t.id} role="status" style={{
+          <div key={t.id} role={t.err ? 'alert' : 'status'} style={{
             background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12,
             padding: '11px 14px 11px 34px', fontSize: 13, position: 'relative', boxShadow: 'var(--card-shadow)',
           }}>
@@ -35,11 +35,30 @@ export function errMsg(e: unknown): string {
 
 /* ---------- Modal ---------- */
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  useEffect(() => {
+    const anterior = document.activeElement as HTMLElement | null
+    const el = ref.current
+    el?.querySelector<HTMLElement>('input,select,textarea,button')?.focus()
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onClose(); return }
+      if (e.key === 'Tab' && el) {
+        const f = el.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')
+        if (!f.length) return
+        const first = f[0], last = f[f.length - 1]
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('keydown', onKey); anterior?.focus?.() }
+  }, [onClose])
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{ position: 'fixed', inset: 0, background: 'rgba(7,28,54,.45)', zIndex: 60, display: 'grid', placeItems: 'center', padding: 18 }}>
-      <div role="dialog" aria-modal style={{ background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto', padding: 24, boxShadow: 'var(--card-shadow)' }}>
-        <h3 style={{ fontSize: 17, fontWeight: 700, margin: '0 0 16px' }}>{title}</h3>
+      <div ref={ref} role="dialog" aria-modal aria-labelledby={titleId} style={{ background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto', padding: 24, boxShadow: 'var(--card-shadow)' }}>
+        <h3 id={titleId} style={{ fontSize: 17, fontWeight: 700, margin: '0 0 16px' }}>{title}</h3>
         {children}
       </div>
     </div>
@@ -66,7 +85,7 @@ export function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement>
   return (
     <div style={{ position: 'relative' }}>
       <input {...props} type={show ? 'text' : 'password'} style={{ ...inp, paddingRight: 40, ...props.style }} />
-      <button type="button" onClick={() => setShow((s) => !s)} tabIndex={-1}
+      <button type="button" onClick={() => setShow((s) => !s)}
         aria-label={show ? 'Ocultar senha' : 'Mostrar senha'} title={show ? 'Ocultar senha' : 'Mostrar senha'}
         style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 16, lineHeight: 1, padding: 4 }}>
         {show ? '🙈' : '👁️'}
@@ -98,4 +117,12 @@ export function Empty({ ico, titulo, texto, children }: { ico: string; titulo: s
     {children}
   </div>
 }
-export function Loading() { return <div style={{ padding: 36, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Carregando…</div> }
+export function Loading() { return <div style={{ padding: 36, textAlign: 'center', color: 'var(--tx2)', fontSize: 13 }}>Carregando…</div> }
+export function ErroCarregar({ onRetry, texto }: { onRetry: () => void; texto?: string }) {
+  return <div style={{ textAlign: 'center', padding: 32 }}>
+    <div style={{ fontSize: 26, marginBottom: 8 }} aria-hidden>⚠️</div>
+    <b style={{ display: 'block', marginBottom: 4 }}>Não foi possível carregar</b>
+    <p style={{ fontSize: 13, color: 'var(--tx2)', margin: '0 auto 14px', maxWidth: 340 }}>{texto ?? 'Verifique sua conexão e tente novamente.'}</p>
+    <BtnSm onClick={onRetry}>Tentar novamente</BtnSm>
+  </div>
+}

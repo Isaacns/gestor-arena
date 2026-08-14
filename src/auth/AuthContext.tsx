@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { sb, type Organization } from '../lib/supabase'
 
@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [orgs, setOrgs] = useState<OrgMembership[]>([])
   const [org, setOrgState] = useState<Organization | null>(null)
   const [role, setRole] = useState<string | null>(null)
+  const uidAtual = useRef<string | null>(null)
 
   async function carregarContexto(u: User) {
     const { data, error } = await sb
@@ -50,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function trocarSessao(session: Session | null) {
     const u = session?.user ?? null
     setUser(u)
-    if (!u) { setOrgs([]); setOrgState(null); setRole(null); setLoading(false); return }
+    if (!u) { uidAtual.current = null; setOrgs([]); setOrgState(null); setRole(null); setLoading(false); return }
+    // TOKEN_REFRESHED / USER_UPDATED do mesmo usuário: mantém o contexto e a tela — não pisca "Carregando…"
+    if (uidAtual.current === u.id) return
+    uidAtual.current = u.id
     setLoading(true)
     void carregarContexto(u)
   }

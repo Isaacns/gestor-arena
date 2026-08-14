@@ -18,8 +18,10 @@ export default function NovaOrg({ onClose }: { onClose: () => void }) {
     setBusy(true)
     const { data, error } = await sb.rpc('criar_organizacao', { p_tipo: tipo, p_nome: nome.trim() })
     if (error) { toast(errMsg(error), true); setBusy(false); return }
-    await reload()
     const nova = (data as { id?: string } | null)?.id
+    // grava a escolha ANTES do reload: carregarContexto lê 'ga_org' e já entra na org nova
+    if (nova) localStorage.setItem('ga_org', nova)
+    await reload()
     if (nova) setOrg(nova)
     toast(`${tipo === 'arena' ? 'Arena' : 'Escolinha'} criada! Você já está nela.`)
     onClose()
