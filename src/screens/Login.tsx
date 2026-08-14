@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { sb } from '../lib/supabase'
 import { PasswordInput } from '../ui/kit'
+import { Logo } from '../ui/Logo'
 
 export default function Login() {
   const [modo, setModo] = useState<'entrar' | 'criar' | 'recuperar'>('entrar')
@@ -41,9 +42,7 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 400, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 20, padding: '36px 32px', boxShadow: 'var(--card-shadow)' }}>
-        <div className="ga-logo" style={{ marginBottom: 22 }}>
-          <span className="mark">A</span><b>Gestor Arena</b>
-        </div>
+        <div style={{ marginBottom: 22 }}><Logo size={38} /></div>
         <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Bem-vindo</h1>
         <p style={{ color: 'var(--tx2)', fontSize: 13, margin: '4px 0 24px' }}>
           A gestão da sua arena e da sua escolinha, no mesmo lugar.

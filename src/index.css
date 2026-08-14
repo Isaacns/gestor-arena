@@ -77,6 +77,44 @@ a { color: var(--brand); text-decoration: none; }
 .ga-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
 .ga-tablewrap { overflow-x:auto; }
 
+/* chips de status (Ativo / A vencer / Atrasado / Cancelado / info) */
+.ga-chip { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
+.ga-chip::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.9; }
+.ga-chip-ok { color:#16A34A; background:rgba(22,163,74,.12); }
+.ga-chip-warn { color:#B45309; background:rgba(245,158,11,.15); }
+.ga-chip-danger { color:#DC2626; background:rgba(220,38,38,.12); }
+.ga-chip-info { color:#0F52D9; background:rgba(23,105,255,.12); }
+.ga-chip-muted { color:#64748B; background:rgba(100,116,139,.14); }
+
+/* dashboard painel-de-comando */
+.ga-kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.ga-kpi { padding:16px 18px; }
+.ga-kpi-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.ga-dash-2col { display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start; }
+.ga-card-h { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ga-card-h b { font-size:15px; }
+.ga-agrow { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); }
+.ga-agrow:last-child { border-bottom:none; }
+.ga-agrow-h { font-size:13px; font-weight:700; color:var(--brand); min-width:44px; }
+.ga-bars { display:flex; align-items:flex-end; gap:6px; height:140px; padding-top:8px; }
+.ga-bar { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; }
+.ga-bar-fill { width:100%; max-width:26px; border-radius:6px 6px 3px 3px; transition:height .2s; }
+.ga-bar-x { font-size:9px; color:var(--tx3); }
+
+/* top bar: busca + notificações */
+.ga-topbar-org { display:flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--line2); border-radius:10px; background:var(--card); font-size:13px; color:var(--tx); cursor:pointer; max-width:230px; }
+.ga-search { flex:1; max-width:420px; display:flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--line2); border-radius:10px; background:var(--bg2); color:var(--tx2); }
+.ga-search input { border:none; background:none; outline:none; width:100%; font-size:14px; color:var(--tx); font-family:inherit; }
+.ga-iconbtn { width:38px; height:38px; border:1px solid var(--line2); background:var(--card); border-radius:10px; cursor:pointer; font-size:16px; color:var(--tx); display:flex; align-items:center; justify-content:center; flex:none; position:relative; }
+.ga-iconbtn .dot { position:absolute; top:8px; right:9px; width:7px; height:7px; border-radius:50%; background:var(--danger); }
+
+@media (max-width:900px){
+  .ga-kpis { grid-template-columns:repeat(2,1fr); }
+  .ga-dash-2col { grid-template-columns:1fr; }
+  .ga-search { display:none; }
+}
+@media (max-width:520px){ .ga-kpis { grid-template-columns:1fr 1fr; } }
+
 /* menu do usuário (topo direito) */
 .ga-menuitem { display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding:9px 11px; border:none; background:none; border-radius:8px; cursor:pointer; font-size:13px; color:var(--tx); font-family:inherit; }
 .ga-menuitem:hover { background:var(--bg2); }
@@ -89,7 +127,9 @@ a { color: var(--brand); text-decoration: none; }
   .ga-shell{ grid-template-columns:1fr; }
   .ga-side:not(.ga-drawer){ display:none; }
   .ga-ham{ display:flex; }
+  .ga-hide-mob{ display:none !important; }
 }
+@media (max-width:520px){ .ga-userlabel{ display:none; } }
 /* mobile: tabela não quebra o layout — rola na horizontal (cards por tela virão como refinamento) */
 @media (max-width:640px){
   .ga-content table{ display:block; overflow-x:auto; white-space:nowrap; }

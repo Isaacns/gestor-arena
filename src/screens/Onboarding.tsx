@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import { errMsg, Field, inp, useToast } from '../ui/kit'
+import { Logo } from '../ui/Logo'
 
 type Perfil = 'arena' | 'escola' | 'ambos'
 
@@ -38,7 +39,7 @@ export default function Onboarding() {
 
   return (
     <div style={{ maxWidth: 520, margin: '6vh auto', padding: 20 }}>
-      <div className="ga-logo" style={{ marginBottom: 18 }}><span className="mark">A</span><b style={{ fontSize: 15 }}>Gestor Arena</b></div>
+      <div style={{ marginBottom: 18 }}><Logo /></div>
       <h2 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>Como você usa o Gestor Arena?</h2>
       <p style={{ color: 'var(--tx2)', fontSize: 14, marginTop: 0 }}>Isso define seu espaço de trabalho. Você pode ter os dois depois.</p>
       <div style={{ display: 'grid', gap: 12, margin: '18px 0' }}>
