@@ -8,7 +8,8 @@ type CobStatus = 'pendente' | 'pago' | 'cancelado' | 'estornado'
 interface Cobranca {
   id: string; org_id: string; student_id: string | null; sacado_nome: string | null; descricao: string
   competencia: string | null; valor: number; vencimento: string; status: CobStatus; valor_pago: number
-  pago_em: string | null; forma_pagamento: string | null; student?: { nome: string } | null
+  pago_em: string | null; forma_pagamento: string | null; invoice_url: string | null; pix_payload: string | null
+  student?: { nome: string } | null
 }
 const brl = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 function isoLocal(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -76,6 +77,15 @@ export default function Financeiro() {
     if (error) return toast(errMsg(error), true)
     toast('Pagamento estornado.'); void carregar()
   }
+  async function cobrar(c: Cobranca) {
+    toast('Gerando cobrança no Asaas…')
+    const { data, error } = await sb.functions.invoke('asaas-cobranca', { body: { cobranca_id: c.id, tipo: 'UNDEFINED' } })
+    if (error) return toast('Não foi possível gerar a cobrança.', true)
+    const d = data as { dormant?: boolean; error?: string; invoiceUrl?: string }
+    if (d?.dormant) return toast('Gateway Asaas ainda não está ligado (configure em Configurações).', true)
+    if (d?.error) return toast(d.error, true)
+    if (d?.invoiceUrl) { window.open(d.invoiceUrl, '_blank'); toast('Cobrança gerada.'); void carregar() }
+  }
 
   if (!pode) return <div className="ga-card"><Empty ico="🔒" titulo="Sem acesso ao financeiro" texto="O financeiro é visível para proprietário, administrador, gerente e financeiro. Fale com quem administra a organização." /></div>
 
@@ -115,7 +125,13 @@ export default function Financeiro() {
                   <td style={td}>{brl(c.valor)}{c.status === 'pago' && c.valor_pago < c.valor ? ` (pago ${brl(c.valor_pago)})` : ''}</td>
                   <td style={td}>{chip(c)}</td>
                   <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {c.status === 'pendente' && <><BtnSm onClick={() => setBaixar(c)} style={{ marginRight: 6 }}>Dar baixa</BtnSm><BtnSm danger onClick={() => void cancelar(c)}>Cancelar</BtnSm></>}
+                    {c.status === 'pendente' && <>
+                      {c.invoice_url
+                        ? <BtnSm onClick={() => window.open(c.invoice_url!, '_blank')} style={{ marginRight: 6 }}>2ª via</BtnSm>
+                        : <BtnSm onClick={() => void cobrar(c)} style={{ marginRight: 6 }}>Cobrar</BtnSm>}
+                      {c.pix_payload && <BtnSm onClick={() => { navigator.clipboard?.writeText(c.pix_payload!); toast('PIX copiado.') }} style={{ marginRight: 6 }}>PIX</BtnSm>}
+                      <BtnSm onClick={() => setBaixar(c)} style={{ marginRight: 6 }}>Dar baixa</BtnSm><BtnSm danger onClick={() => void cancelar(c)}>Cancelar</BtnSm>
+                    </>}
                     {c.status === 'pago' && <BtnSm danger onClick={() => void estornar(c)}>Estornar</BtnSm>}
                   </td>
                 </tr>
