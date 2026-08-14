@@ -21,6 +21,7 @@ import Locais from './screens/Locais'
 import EmBreve from './screens/EmBreve'
 import Bloquear from './screens/Bloquear'
 import AceitarConvite from './screens/AceitarConvite'
+import Financeiro from './screens/Financeiro'
 
 /* ---------- navegação entre telas (para CTAs e sub-telas) ---------- */
 const NavCtx = createContext<(id: string) => void>(() => {})
@@ -41,7 +42,6 @@ const NAV_ESCOLA: Nav[] = [
 
 // módulos das próximas ondas — tela on-brand que explica o módulo (menu já igual ao mockup)
 const Clientes = () => <EmBreve ico="🧑" titulo="Clientes" descricao="Base de clientes da arena: quem aluga suas quadras (avulso ou recorrente), histórico e contato." itens={['Cadastro de clientes e contatos', 'Histórico de reservas e locações por cliente', 'Ligação com contas a receber (Financeiro)']} />
-const Financeiro = () => <EmBreve ico="💰" titulo="Financeiro" descricao="Mensalidades da escola e contas a receber da arena, com cobrança, baixa, estorno e inadimplência — tudo em tabelas reais e seguro por organização." itens={['Mensalidades recorrentes por aluno/turma', 'Contas a receber de locações e contratos', 'Cobrança e baixa; inadimplência (vencido) derivada', 'Integração Asaas (boleto/PIX) — pronta para ligar']} />
 const Estoque = () => <EmBreve ico="📦" titulo="Estoque" descricao="Controle de itens da arena/escola: materiais esportivos, bar/lanchonete, uniformes." itens={['Cadastro de itens e categorias', 'Entradas e saídas com saldo', 'Alertas de estoque baixo']} />
 const Manutencao = () => <EmBreve ico="🔧" titulo="Manutenção" descricao="Ordens de manutenção das quadras e do espaço, para não perder reserva por quadra parada." itens={['Abrir chamado por quadra/unidade', 'Status: aberto → em andamento → concluído', 'Bloqueio da agenda durante a manutenção']} />
 const Relatorios = () => <EmBreve ico="📊" titulo="Relatórios" descricao="Indicadores de ocupação, receita e desempenho para decisão." itens={['Ocupação por quadra/horário/período', 'Receita por origem e prevista × realizada', 'Exportação (CSV/PDF)']} />

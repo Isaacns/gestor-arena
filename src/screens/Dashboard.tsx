@@ -8,15 +8,19 @@ function saudacao() { const h = new Date().getHours(); return h < 12 ? 'Bom dia'
 function isoLocal(d: Date) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const hhmm = (t?: string | null) => (t ?? '').slice(0, 5)
 const horaDe = (t: string) => parseInt(t.slice(0, 2), 10)
+const brl = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function Dashboard() {
   const { org, user, role } = useAuth()
   const ehArena = org?.tipo === 'arena'
+  const podeFin = ['owner', 'admin', 'gerente', 'financeiro'].includes(role ?? '')
   const [quadras, setQuadras] = useState<AgendaQuadra[]>([])
   const [reservas, setReservas] = useState<AgendaReserva[]>([])
   const [vinculos, setVinculos] = useState<Vinculo[]>([])
   const [alunos, setAlunos] = useState<number | null>(null)
   const [turmas, setTurmas] = useState<number | null>(null)
+  const [receita, setReceita] = useState<number | null>(null)
+  const [atraso, setAtraso] = useState<number | null>(null)
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
@@ -43,6 +47,14 @@ export default function Dashboard() {
         ])
         if (!vivo) return
         setAlunos(a.count ?? 0); setTurmas(t.count ?? 0)
+      }
+      if (podeFin) {
+        const { data: cobs } = await sb.from('cobrancas').select('valor_pago,status,pago_em,vencimento').eq('org_id', org.id)
+        if (!vivo) return
+        const rows = (cobs ?? []) as { valor_pago: number; status: string; pago_em: string | null; vencimento: string }[]
+        const mes = hoje.slice(0, 7)
+        setReceita(rows.filter((c) => c.status === 'pago' && (c.pago_em ?? '').slice(0, 7) === mes).reduce((s, c) => s + Number(c.valor_pago), 0))
+        setAtraso(rows.filter((c) => c.status === 'pendente' && c.vencimento < hoje).length)
       }
       setCarregando(false)
     })()
@@ -81,7 +93,7 @@ export default function Dashboard() {
       <div className="ga-kpis">
         {ehArena ? (
           <>
-            <Kpi ico="💰" label="Receita do mês" value="—" hint="Ative o Financeiro" tone="brand" />
+            <Kpi ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? brl(receita) : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
             <Kpi ico="🎯" label="Ocupação média" value={`${ocupPct}%`} hint="hoje" tone="ok" />
             <Kpi ico="📅" label="Reservas hoje" value={carregando ? '…' : reservas.length} hint={`${quadras.length} quadra(s)`} />
             <Kpi ico="⚠️" label="Pendências" value={pendentes.length} hint={pendentes.length ? 'Ver abaixo' : 'tudo em dia'} tone={pendentes.length ? 'warn' : undefined} />
@@ -89,9 +101,9 @@ export default function Dashboard() {
         ) : (
           <>
             <Kpi ico="🎓" label="Alunos ativos" value={alunos ?? '…'} />
+            <Kpi ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? brl(receita) : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
+            <Kpi ico="⏰" label="Em atraso" value={podeFin ? (atraso ?? '…') : '—'} hint={podeFin ? (atraso ? 'mensalidade(s) vencida(s)' : 'em dia') : 'sem acesso'} tone={atraso ? 'warn' : undefined} />
             <Kpi ico="🏐" label="Turmas" value={turmas ?? '…'} />
-            <Kpi ico="💰" label="Receita do mês" value="—" hint="Ative o Financeiro" tone="brand" />
-            <Kpi ico="⏰" label="Mensalidades em atraso" value="—" hint="Ative o Financeiro" />
           </>
         )}
       </div>
@@ -121,12 +133,12 @@ export default function Dashboard() {
         <div className="ga-card">
           <div className="ga-card-h"><b>Precisa da sua atenção</b></div>
           <div style={{ display: 'grid', gap: 10 }}>
+            {podeFin && (atraso ?? 0) > 0 && <Alerta cor="var(--danger)" ico="💰" titulo={`${atraso} cobrança(s) vencida(s)`} texto="Inadimplência para cobrar — veja em Financeiro." />}
             {pendentes.map((v) => (
               <Alerta key={v.id} cor="var(--brand)" ico="🤝" titulo={`Convite de ${v.parceiro_nome}`} texto="Parceria aguardando sua resposta em Parceiros." />
             ))}
             {ehArena && vagas > 0 && <Alerta cor="var(--warn)" ico="🕓" titulo={`${vagas} horário(s) vago(s) hoje`} texto="Oportunidade de preencher a agenda." />}
-            <Alerta cor="var(--tx3)" ico="💡" titulo="Ative o Financeiro" texto="Mensalidades, contas a receber e inadimplência chegam na próxima etapa." />
-            {pendentes.length === 0 && !(ehArena && vagas > 0) && <p style={muted}>Sem alertas críticos. 🎉</p>}
+            {pendentes.length === 0 && !(ehArena && vagas > 0) && !(podeFin && (atraso ?? 0) > 0) && <p style={muted}>Sem alertas críticos. 🎉</p>}
           </div>
         </div>
       </div>
@@ -145,7 +157,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0 }}>Papel: {role ?? '—'} · Receita e analytics financeiros entram com o módulo Financeiro.</p>
+      <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0 }}>Papel: {role ?? '—'}</p>
     </div>
   )
 }
