@@ -12,6 +12,7 @@ import Quadras from './screens/Quadras'
 import Parceiros from './screens/Parceiros'
 import Equipe from './screens/Equipe'
 import Config from './screens/Config'
+import NovaOrg from './screens/NovaOrg'
 
 type Nav = [id: string, ico: string, label: string]
 const NAV_ARENA: Nav[] = [['inicio', '🏠', 'Início'], ['agenda', '📅', 'Agenda'], ['unidades', '📍', 'Unidades'], ['quadras', '🥅', 'Quadras'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações']]
@@ -25,6 +26,7 @@ const TELAS: Record<string, () => JSX.Element> = {
 function Shell() {
   const { org, orgs, role, user, setOrg, signOut } = useAuth()
   const [view, setView] = useState('inicio')
+  const [novaOrg, setNovaOrg] = useState(false)
   const nav = org?.tipo === 'arena' ? NAV_ARENA : NAV_ESCOLA
   const nome = (user?.user_metadata?.nome as string | undefined) ?? user?.email ?? ''
   const Tela = TELAS[view] ?? Dashboard
@@ -34,10 +36,14 @@ function Shell() {
       <aside className="ga-side">
         <div className="ga-logo" style={{ padding: '0 8px', marginBottom: 16 }}><span className="mark">A</span><b>Gestor Arena</b></div>
         {orgs.length > 0 && (
-          <select value={org?.id} onChange={(e) => setOrg(e.target.value)}
-            style={{ margin: '0 4px 12px', padding: '9px 10px', borderRadius: 10, background: 'rgba(255,255,255,.06)', color: '#fff', border: '1px solid rgba(255,255,255,.12)', fontSize: 13 }}>
-            {orgs.map((o) => <option key={o.org.id} value={o.org.id} style={{ color: '#000' }}>{o.org.nome} · {o.org.tipo}</option>)}
-          </select>
+          <div style={{ display: 'flex', gap: 6, margin: '0 4px 12px' }}>
+            <select value={org?.id} onChange={(e) => setOrg(e.target.value)}
+              style={{ flex: 1, minWidth: 0, padding: '9px 10px', borderRadius: 10, background: 'rgba(255,255,255,.06)', color: '#fff', border: '1px solid rgba(255,255,255,.12)', fontSize: 13 }}>
+              {orgs.map((o) => <option key={o.org.id} value={o.org.id} style={{ color: '#000' }}>{o.org.nome} · {o.org.tipo}</option>)}
+            </select>
+            <button type="button" onClick={() => setNovaOrg(true)} title="Nova organização" aria-label="Nova organização"
+              style={{ flex: 'none', width: 36, borderRadius: 10, background: 'rgba(255,255,255,.06)', color: '#fff', border: '1px solid rgba(255,255,255,.12)', cursor: 'pointer', fontSize: 16 }}>+</button>
+          </div>
         )}
         <nav>{nav.map(([id, ic, label]) => (
           <button key={id} className={'ga-nav' + (view === id ? ' on' : '')} onClick={() => setView(id)}><span aria-hidden>{ic}</span>{label}</button>
@@ -55,6 +61,7 @@ function Shell() {
         </header>
         <main className="ga-content"><Tela /></main>
       </div>
+      {novaOrg && <NovaOrg onClose={() => setNovaOrg(false)} />}
     </div>
   )
 }
