@@ -19,6 +19,7 @@ import Perfil from './screens/Perfil'
 import Professores from './screens/Professores'
 import Locais from './screens/Locais'
 import EmBreve from './screens/EmBreve'
+import Bloquear from './screens/Bloquear'
 
 /* ---------- navegação entre telas (para CTAs e sub-telas) ---------- */
 const NavCtx = createContext<(id: string) => void>(() => {})
@@ -105,7 +106,7 @@ function Notificacoes() {
   )
 }
 
-function UserMenu({ onPerfil }: { onPerfil: () => void }) {
+function UserMenu({ onPerfil, onLock }: { onPerfil: () => void; onLock: () => void }) {
   const { user, role, signOut } = useAuth()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -133,6 +134,9 @@ function UserMenu({ onPerfil }: { onPerfil: () => void }) {
       {open && (
         <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', minWidth: 190, background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 6, zIndex: 40 }}>
           <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onPerfil() }}>✏️ Editar perfil</button>
+          <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onPerfil() }}>🔑 Alterar senha</button>
+          <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onLock() }}>🔒 Bloquear</button>
+          <div style={{ height: 1, background: 'var(--line)', margin: '4px 6px' }} />
           <button role="menuitem" className="ga-menuitem" onClick={() => void signOut()}>🚪 Sair</button>
         </div>
       )}
@@ -144,6 +148,7 @@ function Shell() {
   const { org } = useAuth()
   const [view, setView] = useState('inicio')
   const [perfil, setPerfil] = useState(false)
+  const [locked, setLocked] = useState(false)
   const [drawer, setDrawer] = useState(false)
   const [busca, setBusca] = useState('')
   const nav = org?.tipo === 'arena' ? NAV_ARENA : NAV_ESCOLA
@@ -182,11 +187,12 @@ function Shell() {
             </label>
             <div style={{ flex: 1 }} />
             <Notificacoes />
-            <UserMenu onPerfil={() => setPerfil(true)} />
+            <UserMenu onPerfil={() => setPerfil(true)} onLock={() => setLocked(true)} />
           </header>
           <main className="ga-content"><Tela key={org?.id} /></main>
         </div>
         {perfil && <Perfil onClose={() => setPerfil(false)} />}
+        {locked && <Bloquear onUnlock={() => setLocked(false)} />}
       </div>
     </NavCtx.Provider>
   )
