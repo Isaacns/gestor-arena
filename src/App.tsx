@@ -15,13 +15,14 @@ import Config from './screens/Config'
 import NovaOrg from './screens/NovaOrg'
 import Perfil from './screens/Perfil'
 import Professores from './screens/Professores'
+import Locais from './screens/Locais'
 
 type Nav = [id: string, ico: string, label: string]
 const NAV_ARENA: Nav[] = [['inicio', '🏠', 'Início'], ['agenda', '📅', 'Agenda'], ['unidades', '📍', 'Unidades'], ['quadras', '🥅', 'Quadras'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações']]
-const NAV_ESCOLA: Nav[] = [['inicio', '🏠', 'Início'], ['agenda', '📅', 'Agenda'], ['alunos', '🎓', 'Alunos'], ['turmas', '🏐', 'Turmas'], ['professores', '👤', 'Professores'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações']]
+const NAV_ESCOLA: Nav[] = [['inicio', '🏠', 'Início'], ['agenda', '📅', 'Agenda'], ['alunos', '🎓', 'Alunos'], ['turmas', '🏐', 'Turmas'], ['professores', '👤', 'Professores'], ['locais', '📍', 'Locais'], ['parceiros', '🤝', 'Parceiros'], ['equipe', '👥', 'Equipe'], ['config', '⚙️', 'Configurações']]
 
 const TELAS: Record<string, () => JSX.Element> = {
-  inicio: Dashboard, agenda: Agenda, alunos: Alunos, turmas: Turmas, professores: Professores,
+  inicio: Dashboard, agenda: Agenda, alunos: Alunos, turmas: Turmas, professores: Professores, locais: Locais,
   unidades: Unidades, quadras: Quadras, parceiros: Parceiros, equipe: Equipe, config: Config,
 }
 

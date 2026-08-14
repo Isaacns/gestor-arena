@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
-import type { ClassRow, Enrollment, PresencaStatus, Professional, Student } from '../lib/database.types'
+import type { AgendaQuadra, ClassRow, Enrollment, ExternalVenue, PresencaStatus, Professional, Student } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -92,22 +92,44 @@ function CriarTurma({ profs, onClose, onSaved }: { profs: Professional[]; onClos
   const [nome, setNome] = useState(''); const [prof, setProf] = useState('')
   const [cap, setCap] = useState('8'); const [dias, setDias] = useState<number[]>([])
   const [ini, setIni] = useState('19:00'); const [fim, setFim] = useState('20:00'); const [mens, setMens] = useState('')
+  const [espaco, setEspaco] = useState('')   // '' | 'court:<id>' | 'venue:<id>'
+  const [quadras, setQuadras] = useState<AgendaQuadra[]>([])
+  const [venues, setVenues] = useState<ExternalVenue[]>([])
   const [busy, setBusy] = useState(false)
   function toggleDia(d: number) { setDias((s) => s.includes(d) ? s.filter((x) => x !== d) : [...s, d]) }
+
+  // quadras de arenas parceiras (com agenda) + locais próprios, para amarrar a turma a um espaço
+  useEffect(() => {
+    if (!org) return
+    let vivo = true
+    ;(async () => {
+      const [q, v] = await Promise.all([
+        sb.rpc('agenda_quadras', { p_org: org.id }),
+        sb.from('external_venues').select('*').eq('org_id', org.id).eq('ativo', true).order('nome'),
+      ])
+      if (!vivo) return
+      setQuadras((q.data as AgendaQuadra[]) ?? [])
+      setVenues((v.data as ExternalVenue[]) ?? [])
+    })()
+    return () => { vivo = false }
+  }, [org])
 
   async function salvar() {
     if (!org) return
     if (!nome.trim()) { toast('Informe o nome da turma.', true); return }
+    const p_court = espaco.startsWith('court:') ? espaco.slice(6) : null
+    const p_external_venue = espaco.startsWith('venue:') ? espaco.slice(6) : null
+    if (p_court && dias.length === 0) { toast('Para reservar a quadra da arena, escolha os dias da turma.', true); return }
     setBusy(true)
     const { error } = await sb.rpc('criar_turma', {
       p_org: org.id, p_nome: nome.trim(), p_sport: null, p_nivel: '', p_professor: prof || null,
       p_capacidade: Number(cap) || 8, p_dias: dias, p_inicio: ini, p_fim: fim,
       p_mensalidade: mens ? Number(mens) : null,
-      p_court: null, p_external_venue: null, p_vig_fim: null,
+      p_court, p_external_venue, p_vig_fim: null,
     })
     setBusy(false)
     if (error) { toast(errMsg(error), true); return }
-    toast('Turma criada.'); onSaved()
+    toast(p_court ? 'Turma criada e reservas geradas na agenda.' : 'Turma criada.'); onSaved()
   }
 
   return (
@@ -136,6 +158,20 @@ function CriarTurma({ profs, onClose, onSaved }: { profs: Professional[]; onClos
         <Field label="Fim"><input style={inp} type="time" value={fim} onChange={(e) => setFim(e.target.value)} /></Field>
         <Field label="Mensalidade"><input style={inp} type="number" placeholder="280" value={mens} onChange={(e) => setMens(e.target.value)} /></Field>
       </div>
+      {(quadras.length > 0 || venues.length > 0) && (
+        <Field label="Onde acontece? (opcional)">
+          <select style={inp} value={espaco} onChange={(e) => setEspaco(e.target.value)}>
+            <option value="">Definir depois</option>
+            {quadras.length > 0 && <optgroup label="Quadra de arena parceira (gera a reserva na agenda)">
+              {quadras.map((q) => <option key={q.court_id} value={`court:${q.court_id}`}>{q.court_nome} · {q.arena_nome}</option>)}
+            </optgroup>}
+            {venues.length > 0 && <optgroup label="Local próprio">
+              {venues.map((v) => <option key={v.id} value={`venue:${v.id}`}>{v.nome}</option>)}
+            </optgroup>}
+          </select>
+        </Field>
+      )}
+      {espaco.startsWith('court:') && <p style={{ fontSize: 12, color: 'var(--tx2)', margin: '-8px 0 12px' }}>A reserva recorrente da turma entra automaticamente na agenda desta quadra.</p>}
       <Foot>
         <BtnGhost onClick={onClose}>Cancelar</BtnGhost>
         <button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void salvar()}>{busy ? 'Salvando…' : 'Criar turma'}</button>
