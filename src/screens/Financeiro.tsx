@@ -161,19 +161,21 @@ function GerarMensalidades({ mes, onClose, onSaved }: { mes: string; onClose: ()
 function NovaCobranca({ ehEscola, onClose, onSaved }: { ehEscola: boolean; onClose: () => void; onSaved: () => void }) {
   const { org } = useAuth(); const toast = useToast()
   const [alunos, setAlunos] = useState<Student[]>([])
-  const [student, setStudent] = useState(''); const [sacado, setSacado] = useState('')
+  const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
+  const [student, setStudent] = useState(''); const [customerId, setCustomerId] = useState(''); const [sacado, setSacado] = useState('')
   const [descricao, setDescricao] = useState(''); const [valor, setValor] = useState(''); const [venc, setVenc] = useState(hojeIso())
   const [busy, setBusy] = useState(false)
   useEffect(() => {
-    if (!ehEscola || !org) return
-    void sb.from('students').select('id, nome').eq('org_id', org.id).not('situacao', 'in', '("cancelado","arquivado")').order('nome').then(({ data }) => setAlunos((data as Student[]) ?? []))
+    if (!org) return
+    if (ehEscola) void sb.from('students').select('id, nome').eq('org_id', org.id).not('situacao', 'in', '("cancelado","arquivado")').order('nome').then(({ data }) => setAlunos((data as Student[]) ?? []))
+    else void sb.from('customers').select('id, nome').eq('org_id', org.id).eq('ativo', true).order('nome').then(({ data }) => setClientes((data as { id: string; nome: string }[]) ?? []))
   }, [ehEscola, org])
   async function salvar() {
     if (!org) return
     if (!descricao.trim()) return toast('Informe a descrição.', true)
     if (!valor || Number(valor) <= 0) return toast('Informe um valor válido.', true)
     setBusy(true)
-    const { error } = await sb.rpc('criar_cobranca', { p_org: org.id, p_student: student || null, p_sacado: sacado.trim() || null, p_descricao: descricao.trim(), p_valor: Number(valor), p_vencimento: venc, p_competencia: null })
+    const { error } = await sb.rpc('criar_cobranca', { p_org: org.id, p_customer: customerId || null, p_student: student || null, p_sacado: sacado.trim() || null, p_descricao: descricao.trim(), p_valor: Number(valor), p_vencimento: venc, p_competencia: null })
     setBusy(false)
     if (error) return toast(errMsg(error), true)
     toast('Cobrança criada.'); onSaved()
@@ -185,7 +187,12 @@ function NovaCobranca({ ehEscola, onClose, onSaved }: { ehEscola: boolean; onClo
           <option value="">— sem aluno vinculado —</option>{alunos.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}
         </select></Field>
       ) : (
-        <Field label="Cliente / sacado"><input style={inp} placeholder="Ex.: Escolinha do João" value={sacado} onChange={(e) => setSacado(e.target.value)} /></Field>
+        <>
+          <Field label="Cliente (opcional)"><select style={inp} value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+            <option value="">— avulso / sem cadastro —</option>{clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select></Field>
+          {!customerId && <Field label="Nome do sacado (se não cadastrado)"><input style={inp} placeholder="Ex.: Escolinha do João" value={sacado} onChange={(e) => setSacado(e.target.value)} /></Field>}
+        </>
       )}
       <Field label="Descrição *"><input style={inp} placeholder={ehEscola ? 'Ex.: Uniforme, taxa de matrícula' : 'Ex.: Locação quadra 01 — janeiro'} value={descricao} onChange={(e) => setDescricao(e.target.value)} /></Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
