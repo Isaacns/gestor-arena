@@ -20,6 +20,7 @@ import Professores from './screens/Professores'
 import Locais from './screens/Locais'
 import Bloquear from './screens/Bloquear'
 import AceitarConvite from './screens/AceitarConvite'
+import PortalAluno from './screens/PortalAluno'
 import Financeiro from './screens/Financeiro'
 import Clientes from './screens/Clientes'
 import Relatorios from './screens/Relatorios'
@@ -207,7 +208,10 @@ function Gate() {
 }
 
 export default function App() {
-  const convite = new URLSearchParams(window.location.search).get('convite')
+  const params = new URLSearchParams(window.location.search)
+  const portal = params.get('portal')
+  if (portal) return <ToastHost><PortalAluno token={portal} /></ToastHost>
+  const convite = params.get('convite')
   return (
     <ToastHost>
       <AuthProvider>

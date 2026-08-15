@@ -21,6 +21,7 @@ export default function Alunos() {
   const [lista, setLista] = useState<Student[]>([])
   const [filtro, setFiltro] = useState<AlunoSituacao | 'todos'>('todos')
   const [edit, setEdit] = useState<Partial<Student> | null>(null)
+  const [portalDe, setPortalDe] = useState<Student | null>(null)
   const podeEditar = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao'].includes(role ?? '')
 
   async function carregar() {
@@ -63,7 +64,7 @@ export default function Alunos() {
                   <td style={td}>{s.telefone ?? s.responsavel ?? '—'}</td>
                   <td style={td}>{s.nivel ?? '—'}</td>
                   <td style={td}><Badge color={SITU[s.situacao].cor}>{SITU[s.situacao].label}</Badge></td>
-                  <td style={{ ...td, textAlign: 'right' }}>{podeEditar && <BtnSm onClick={() => setEdit(s)}>Editar</BtnSm>}</td>
+                  <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>{podeEditar && <><BtnSm onClick={() => setPortalDe(s)} style={{ marginRight: 6 }}>🔗 Portal</BtnSm><BtnSm onClick={() => setEdit(s)}>Editar</BtnSm></>}</td>
                 </tr>
               ))}
             </tbody>
@@ -72,7 +73,35 @@ export default function Alunos() {
       </div>
 
       {edit && <EditarAluno aluno={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); void carregar() }} />}
+      {portalDe && <PortalLink aluno={portalDe} onClose={() => setPortalDe(null)} />}
     </div>
+  )
+}
+
+function PortalLink({ aluno, onClose }: { aluno: Student; onClose: () => void }) {
+  const toast = useToast()
+  const [link, setLink] = useState('')
+  const [erro, setErro] = useState(false)
+  useEffect(() => {
+    let vivo = true
+    void sb.rpc('gerar_token_portal', { p_student: aluno.id }).then(({ data, error }) => {
+      if (!vivo) return
+      if (error || !data) { setErro(true); return }
+      setLink(`${window.location.origin}/?portal=${data}`)
+    })
+    return () => { vivo = false }
+  }, [aluno.id])
+  return (
+    <Modal title={`Portal de ${aluno.nome}`} onClose={onClose}>
+      <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>Link pessoal (só leitura) para o aluno/responsável ver turmas, presença e mensalidades. Gerar de novo invalida o link anterior.</p>
+      {erro ? <p style={{ fontSize: 13, color: 'var(--danger)' }}>Não foi possível gerar o link.</p>
+        : !link ? <p style={{ fontSize: 13, color: 'var(--tx2)' }}>Gerando…</p>
+          : <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <code style={{ flex: 1, minWidth: 0, background: 'var(--bg2)', border: '1px dashed var(--line2)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: 'var(--brand)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link}</code>
+              <BtnSm onClick={() => { navigator.clipboard?.writeText(link); toast('Link copiado.') }}>Copiar</BtnSm>
+            </div>}
+      <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Concluir</button></Foot>
+    </Modal>
   )
 }
 
