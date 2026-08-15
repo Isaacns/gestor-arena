@@ -275,8 +275,16 @@ function Chamada({ turma, enr, onClose }: { turma: ClassRow; enr: (Enrollment & 
     setBusy(true)
     const itens = enr.map((e) => ({ student_id: e.student_id, status: marc[e.student_id] ?? 'presente' }))
     const { error } = await sb.rpc('registrar_chamada', { p_class: turma.id, p_data: data, p_itens: itens })
+    if (error) { setBusy(false); toast(errMsg(error), true); return }
+    // oferece reposição para as faltas (só na 1ª chamada da data, para não duplicar)
+    const ausentes = enr.filter((e) => (marc[e.student_id] ?? 'presente') === 'ausente')
+    if (!jaReg && ausentes.length > 0 && confirm(`${ausentes.length} aluno(s) faltaram. Criar reposição pendente para eles?`)) {
+      const { error: em } = await sb.from('makeups').insert(ausentes.map((e) => ({ org_id: turma.org_id, student_id: e.student_id, origem_class_id: turma.id, origem_data: data, status: 'pendente' })))
+      setBusy(false)
+      toast(em ? 'Chamada registrada. (Você não tem permissão para gerar reposições.)' : `Chamada registrada e ${ausentes.length} reposição(ões) criada(s).`, !!em)
+      onClose(); return
+    }
     setBusy(false)
-    if (error) { toast(errMsg(error), true); return }
     toast(jaReg ? 'Chamada atualizada.' : 'Chamada registrada.'); onClose()
   }
 
