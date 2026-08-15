@@ -10,6 +10,9 @@ const ST: Record<RStatus, { label: string; chip: string }> = {
   realizada: { label: 'Realizada', chip: 'ga-chip-ok' }, cancelada: { label: 'Cancelada', chip: 'ga-chip-muted' },
 }
 const fmt = (s: string | null) => s ? s.split('-').reverse().join('/') : '—'
+const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+type Turma = { id: string; nome: string; dias_semana: number[] | null; hora_inicio: string | null }
+const rotuloTurma = (t: Turma) => `${t.nome}${t.dias_semana?.length ? ' · ' + t.dias_semana.map((d) => DIAS[d]).join('/') : ''}${t.hora_inicio ? ' ' + t.hora_inicio.slice(0, 5) : ''}`
 
 export default function Reposicoes() {
   const { org, role } = useAuth()
@@ -18,7 +21,7 @@ export default function Reposicoes() {
   const [erro, setErro] = useState(false)
   const [lista, setLista] = useState<Rep[]>([])
   const [alunos, setAlunos] = useState<{ id: string; nome: string }[]>([])
-  const [turmas, setTurmas] = useState<{ id: string; nome: string }[]>([])
+  const [turmas, setTurmas] = useState<Turma[]>([])
   const [edit, setEdit] = useState<Partial<Rep> | null>(null)
   const pode = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao'].includes(role ?? '')
 
@@ -28,10 +31,10 @@ export default function Reposicoes() {
     const [r, a, t] = await Promise.all([
       sb.from('makeups').select('*, student:students(nome)').eq('org_id', org.id).order('criado_em', { ascending: false }),
       sb.from('students').select('id, nome').eq('org_id', org.id).not('situacao', 'in', '("cancelado","arquivado")').order('nome'),
-      sb.from('classes').select('id, nome').eq('org_id', org.id).eq('ativo', true).order('nome'),
+      sb.from('classes').select('id, nome, dias_semana, hora_inicio').eq('org_id', org.id).eq('ativo', true).order('nome'),
     ])
     if (r.error) { setErro(true); setLoading(false); return }
-    setLista((r.data as Rep[]) ?? []); setAlunos((a.data as { id: string; nome: string }[]) ?? []); setTurmas((t.data as { id: string; nome: string }[]) ?? []); setLoading(false)
+    setLista((r.data as Rep[]) ?? []); setAlunos((a.data as { id: string; nome: string }[]) ?? []); setTurmas((t.data as Turma[]) ?? []); setLoading(false)
   }
   useEffect(() => { void carregar() }, [org])
   const nomeTurma = (id: string | null) => turmas.find((c) => c.id === id)?.nome ?? '—'
@@ -78,7 +81,7 @@ export default function Reposicoes() {
   )
 }
 
-function EditarRep({ rep, alunos, turmas, onClose, onSaved }: { rep: Partial<Rep>; alunos: { id: string; nome: string }[]; turmas: { id: string; nome: string }[]; onClose: () => void; onSaved: () => void }) {
+function EditarRep({ rep, alunos, turmas, onClose, onSaved }: { rep: Partial<Rep>; alunos: { id: string; nome: string }[]; turmas: Turma[]; onClose: () => void; onSaved: () => void }) {
   const { org } = useAuth(); const toast = useToast()
   const [f, setF] = useState<Partial<Rep>>({ status: 'pendente', ...rep })
   const [busy, setBusy] = useState(false)
@@ -87,6 +90,11 @@ function EditarRep({ rep, alunos, turmas, onClose, onSaved }: { rep: Partial<Rep
   async function salvar() {
     if (!org) return
     if (!f.student_id) return toast('Escolha o aluno.', true)
+    if (f.destino_class_id && f.destino_data) {
+      const tt = turmas.find((t) => t.id === f.destino_class_id)
+      const dow = new Date(f.destino_data + 'T00:00:00').getDay()
+      if (tt?.dias_semana?.length && !tt.dias_semana.includes(dow) && !confirm('A data escolhida não é um dia dessa turma. Agendar mesmo assim?')) return
+    }
     setBusy(true)
     const dados = { org_id: org.id, student_id: f.student_id, origem_class_id: f.origem_class_id || null, origem_data: f.origem_data || null, destino_class_id: f.destino_class_id || null, destino_data: f.destino_data || null, status: (f.destino_class_id && f.destino_data && f.status === 'pendente') ? 'agendada' : (f.status || 'pendente'), obs: f.obs || null }
     const { error } = editando ? await sb.from('makeups').update(dados).eq('id', rep.id!) : await sb.from('makeups').insert(dados)
@@ -98,11 +106,11 @@ function EditarRep({ rep, alunos, turmas, onClose, onSaved }: { rep: Partial<Rep
     <Modal title={editando ? 'Editar reposição' : 'Nova reposição'} onClose={onClose}>
       <Field label="Aluno *"><select style={inp} value={f.student_id ?? ''} onChange={(e) => set('student_id', e.target.value)}><option value="">— escolha —</option>{alunos.map((a) => <option key={a.id} value={a.id}>{a.nome}</option>)}</select></Field>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-        <Field label="Faltou na turma"><select style={inp} value={f.origem_class_id ?? ''} onChange={(e) => set('origem_class_id', e.target.value || null)}><option value="">—</option>{turmas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}</select></Field>
+        <Field label="Faltou na turma"><select style={inp} value={f.origem_class_id ?? ''} onChange={(e) => set('origem_class_id', e.target.value || null)}><option value="">—</option>{turmas.map((t) => <option key={t.id} value={t.id}>{rotuloTurma(t)}</option>)}</select></Field>
         <Field label="Data da falta"><input type="date" style={inp} value={f.origem_data ?? ''} onChange={(e) => set('origem_data', e.target.value || null)} /></Field>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
-        <Field label="Repõe na turma"><select style={inp} value={f.destino_class_id ?? ''} onChange={(e) => set('destino_class_id', e.target.value || null)}><option value="">— a definir —</option>{turmas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}</select></Field>
+        <Field label="Repõe na turma"><select style={inp} value={f.destino_class_id ?? ''} onChange={(e) => set('destino_class_id', e.target.value || null)}><option value="">— a definir —</option>{turmas.map((t) => <option key={t.id} value={t.id}>{rotuloTurma(t)}</option>)}</select></Field>
         <Field label="Data da reposição"><input type="date" style={inp} value={f.destino_data ?? ''} onChange={(e) => set('destino_data', e.target.value || null)} /></Field>
       </div>
       {editando && <Field label="Status"><select style={inp} value={f.status ?? 'pendente'} onChange={(e) => set('status', e.target.value as RStatus)}>{(Object.keys(ST) as RStatus[]).map((s) => <option key={s} value={s}>{ST[s].label}</option>)}</select></Field>}
