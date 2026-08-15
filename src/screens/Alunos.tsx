@@ -22,6 +22,7 @@ export default function Alunos() {
   const [filtro, setFiltro] = useState<AlunoSituacao | 'todos'>('todos')
   const [edit, setEdit] = useState<Partial<Student> | null>(null)
   const [portalDe, setPortalDe] = useState<Student | null>(null)
+  const [detalhe, setDetalhe] = useState<Student | null>(null)
   const podeEditar = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao'].includes(role ?? '')
 
   async function carregar() {
@@ -60,7 +61,7 @@ export default function Alunos() {
             <tbody>
               {visiveis.map((s) => (
                 <tr key={s.id}>
-                  <td style={td}><b>{s.nome}</b></td>
+                  <td style={td}><button type="button" onClick={() => setDetalhe(s)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--brand)', font: 'inherit', fontWeight: 700, textAlign: 'left' }}>{s.nome}</button></td>
                   <td style={td}>{s.telefone ?? s.responsavel ?? '—'}</td>
                   <td style={td}>{s.nivel ?? '—'}</td>
                   <td style={td}><Badge color={SITU[s.situacao].cor}>{SITU[s.situacao].label}</Badge></td>
@@ -74,9 +75,61 @@ export default function Alunos() {
 
       {edit && <EditarAluno aluno={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); void carregar() }} />}
       {portalDe && <PortalLink aluno={portalDe} onClose={() => setPortalDe(null)} />}
+      {detalhe && <DetalheAluno aluno={detalhe} onClose={() => setDetalhe(null)} />}
     </div>
   )
 }
+
+function DetalheAluno({ aluno, onClose }: { aluno: Student; onClose: () => void }) {
+  const [turmas, setTurmas] = useState<{ class: { nome: string; dias_semana: number[] | null; hora_inicio: string | null; hora_fim: string | null } | null }[]>([])
+  const [pres, setPres] = useState<{ data: string; status: string; class: { nome: string } | null }[]>([])
+  const [cobs, setCobs] = useState<{ descricao: string; valor: number; vencimento: string; status: string }[]>([])
+  const [loading, setLoading] = useState(true)
+  const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  const brl = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const fmt = (s: string) => s.split('-').reverse().join('/')
+  useEffect(() => {
+    let vivo = true
+    ;(async () => {
+      const [e, a, c] = await Promise.all([
+        sb.from('enrollments').select('class:classes(nome,dias_semana,hora_inicio,hora_fim)').eq('student_id', aluno.id).eq('status', 'ativa'),
+        sb.from('attendance').select('data,status, class:classes(nome)').eq('student_id', aluno.id).order('data', { ascending: false }).limit(20),
+        sb.from('cobrancas').select('descricao,valor,vencimento,status').eq('student_id', aluno.id).order('vencimento', { ascending: false }).limit(12),
+      ])
+      if (!vivo) return
+      setTurmas((e.data as unknown as typeof turmas) ?? []); setPres((a.data as unknown as typeof pres) ?? []); setCobs((c.data as unknown as typeof cobs) ?? []); setLoading(false)
+    })()
+    return () => { vivo = false }
+  }, [aluno.id])
+  return (
+    <Modal title={aluno.nome} onClose={onClose}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <Badge color={SITU[aluno.situacao].cor}>{SITU[aluno.situacao].label}</Badge>
+        {aluno.telefone && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>📞 {aluno.telefone}</span>}
+        {aluno.responsavel && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>👪 {aluno.responsavel}</span>}
+        {aluno.documento && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>🪪 {aluno.documento}</span>}
+      </div>
+      {loading ? <Loading /> : <>
+        <Bloco titulo="Turmas ativas">
+          {turmas.length === 0 ? <Nada>Sem matrícula ativa.</Nada> : turmas.map((t, i) => (
+            <div key={i} style={{ fontSize: 13, padding: '4px 0' }}><b>{t.class?.nome ?? '—'}</b> <span style={{ color: 'var(--tx2)' }}>{(t.class?.dias_semana ?? []).map((d) => DIAS[d]).join(', ')}{t.class?.hora_inicio ? ` · ${t.class.hora_inicio.slice(0, 5)}` : ''}</span></div>
+          ))}
+        </Bloco>
+        {cobs.length > 0 && <Bloco titulo="Mensalidades">
+          {cobs.map((c, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}><span>{c.descricao} · {fmt(c.vencimento)}</span><span><b>{brl(c.valor)}</b> · {c.status === 'pago' ? '✅' : c.vencimento < new Date().toISOString().slice(0, 10) ? '🔴' : '⏳'}</span></div>)}
+        </Bloco>}
+        <Bloco titulo="Presença recente">
+          {pres.length === 0 ? <Nada>Sem registros.</Nada> : pres.map((p, i) => <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '4px 0' }}><span>{fmt(p.data)} · {p.class?.nome ?? ''}</span><span style={{ color: 'var(--tx2)' }}>{p.status}</span></div>)}
+        </Bloco>
+      </>}
+      <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Fechar</button></Foot>
+    </Modal>
+  )
+}
+function Bloco({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return <div style={{ marginBottom: 14 }}><div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{titulo}</div>{children}</div>
+}
+function Nada({ children }: { children: React.ReactNode }) { return <p style={{ fontSize: 13, color: 'var(--tx2)', margin: 0 }}>{children}</p> }
 
 function PortalLink({ aluno, onClose }: { aluno: Student; onClose: () => void }) {
   const toast = useToast()

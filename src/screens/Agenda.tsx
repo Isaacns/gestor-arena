@@ -161,6 +161,17 @@ function ReservaModal({ quadras, data, nova, abrir, podeAgenda, onClose, onSaved
   const [ate, setAte] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const previewRec = useMemo(() => {
+    if (!rep || dias.length === 0) return [] as string[]
+    const inicio = new Date(d + 'T00:00:00')
+    const hoje0 = new Date(); hoje0.setHours(0, 0, 0, 0)
+    const cur = new Date(Math.max(inicio.getTime(), hoje0.getTime()))
+    const fimD = ate ? new Date(ate + 'T00:00:00') : addDias(new Date(), 120)
+    const out: string[] = []
+    while (cur <= fimD && out.length < 400) { if (dias.includes(cur.getDay())) out.push(iso(new Date(cur))); cur.setDate(cur.getDate() + 1) }
+    return out
+  }, [rep, dias, d, ate])
+
   if (soLeitura) {
     return <Modal title="Horário ocupado" onClose={onClose}>
       <p style={{ fontSize: 14 }}>{ini}–{fim}</p>
@@ -230,6 +241,9 @@ function ReservaModal({ quadras, data, nova, abrir, podeAgenda, onClose, onSaved
                 style={{ fontSize: 12, padding: '6px 10px', borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (dias.includes(i) ? 'var(--brand)' : 'var(--line2)'), background: dias.includes(i) ? 'var(--brand)' : 'var(--bg2)', color: dias.includes(i) ? '#fff' : 'var(--tx2)' }}>{dd}</button>)}
             </div></Field>
             <Field label="Repetir até (opcional)"><input style={inp} type="date" value={ate} onChange={(e) => setAte(e.target.value)} /></Field>
+            {dias.length > 0 && <p style={{ fontSize: 12, color: 'var(--tx2)', margin: '-6px 0 10px' }}>
+              <b>{previewRec.length}</b> ocorrência(s){previewRec.length > 0 ? `: ${previewRec.slice(0, 5).map((x) => x.slice(8, 10) + '/' + x.slice(5, 7)).join(', ')}${previewRec.length > 5 ? '…' : ''}` : ''} — horários já ocupados são pulados.
+            </p>}
           </>}
         </>
       )}

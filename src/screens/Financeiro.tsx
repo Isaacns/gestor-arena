@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import type { Student } from '../lib/database.types'
-import { BtnGhost, BtnSm, Empty, ErroCarregar, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
+import { BtnGhost, BtnSm, Empty, ErroCarregar, Field, Foot, Loading, Modal, baixarCSV, errMsg, inp, useToast } from '../ui/kit'
 
 type CobStatus = 'pendente' | 'pago' | 'cancelado' | 'estornado'
 interface Cobranca {
@@ -86,6 +86,15 @@ export default function Financeiro() {
     if (d?.error) return toast(d.error, true)
     if (d?.invoiceUrl) { window.open(d.invoiceUrl, '_blank'); toast('Cobrança gerada.'); void carregar() }
   }
+  function exportar() {
+    const linhas: (string | number | null)[][] = [['Sacado', 'Descrição', 'Competência', 'Vencimento', 'Valor', 'Pago', 'Situação']]
+    visiveis.forEach((c) => linhas.push([
+      c.student?.nome ?? c.sacado_nome ?? '', c.descricao, c.competencia ?? '', c.vencimento,
+      Number(c.valor).toFixed(2), Number(c.valor_pago).toFixed(2),
+      c.status === 'pendente' && c.vencimento < hojeIso() ? 'vencido' : c.status,
+    ]))
+    baixarCSV(`financeiro-${mes}.csv`, linhas)
+  }
 
   if (!pode) return <div className="ga-card"><Empty ico="🔒" titulo="Sem acesso ao financeiro" texto="O financeiro é visível para proprietário, administrador, gerente e financeiro. Fale com quem administra a organização." /></div>
 
@@ -105,6 +114,7 @@ export default function Financeiro() {
         </select>
         <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{visiveis.length} cobrança(s)</span>
         <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+          <BtnSm onClick={exportar} disabled={visiveis.length === 0}>⬇ CSV</BtnSm>
           {ehEscola && <BtnSm onClick={() => setGerar(true)}>📅 Gerar mensalidades</BtnSm>}
           <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setNova(true)}>+ Nova cobrança</button>
         </div>

@@ -33,6 +33,16 @@ export function errMsg(e: unknown): string {
   return m || 'Algo deu errado. Tente novamente.'
 }
 
+// Exporta linhas como CSV (separador ; para o Excel BR, com BOM para acentos).
+export function baixarCSV(nome: string, linhas: (string | number | null)[][]) {
+  const esc = (v: string | number | null) => { const s = String(v ?? ''); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
+  const csv = linhas.map((l) => l.map(esc).join(';')).join('\r\n')
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 /* ---------- Modal ---------- */
 // pilha global: com modais aninhados (ex.: Gerir turma → Chamada) só o do topo trata Escape/Tab
 const modalStack: symbol[] = []

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import type { AgendaQuadra, AgendaReserva } from '../lib/database.types'
-import { Empty, Loading } from '../ui/kit'
+import { BtnSm, Empty, Loading, baixarCSV } from '../ui/kit'
 
 const H_INI = 6, H_FIM = 22
 const brl = (n: number) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -107,6 +107,19 @@ export default function Relatorios() {
     return Object.entries(acc).sort((a, b) => b[1] - a[1])
   }, [reservas])
 
+  function exportar() {
+    const L: (string | number | null)[][] = [['Gestor Arena — Relatório', mes], []]
+    if (podeFin) {
+      L.push(['Financeiro do mês'], ['Recebido', kpiFin.recebido.toFixed(2)], ['A receber', kpiFin.aReceber.toFixed(2)], ['Inadimplência', kpiFin.vencido.toFixed(2)], [])
+      L.push(['Receita recebida (6 meses)'], ['Mês', 'Valor'])
+      receitaMes.forEach((r) => L.push([r.key, r.v.toFixed(2)]))
+      L.push([])
+    }
+    if (ehArena) { L.push(['Ocupação por quadra (%)'], ['Quadra', 'Ocupação']); ocup.forEach((q) => L.push([q.nome, q.pct])); L.push([]); L.push(['Reservas por tipo'], ['Tipo', 'Qtde']); porTipo.forEach(([t, n]) => L.push([TIPOS[t]?.label ?? t, n])) }
+    else { L.push(['Alunos por situação'], ['Situação', 'Alunos']); Object.keys(SITU).forEach((k) => { if (situacoes[k]) L.push([SITU[k].label, situacoes[k]]) }) }
+    baixarCSV(`relatorio-${mes}.csv`, L)
+  }
+
   if (!pode) return <div className="ga-card"><Empty ico="📊" titulo="Sem acesso aos relatórios" texto="Relatórios são para proprietário, administrador, gerente, coordenador e financeiro." /></div>
 
   return (
@@ -114,6 +127,7 @@ export default function Relatorios() {
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <input type="month" style={{ background: 'var(--bg2)', border: '1px solid var(--line2)', color: 'var(--tx)', borderRadius: 10, padding: '8px 12px', fontSize: 14 }} value={mes} onChange={(e) => setMes(e.target.value)} aria-label="Mês" />
         <span style={{ fontSize: 13, color: 'var(--tx2)' }}>Relatórios do mês selecionado</span>
+        <BtnSm onClick={exportar} disabled={loading} style={{ marginLeft: 'auto' }}>⬇ Exportar CSV</BtnSm>
       </div>
 
       {loading ? <div className="ga-card"><Loading /></div> : (
