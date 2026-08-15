@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type JSX } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthContext'
+import { sb } from './lib/supabase'
 import { ToastHost } from './ui/kit'
 import { Logo, LogoMark } from './ui/Logo'
 import { Icon } from './ui/icons'
@@ -86,21 +87,66 @@ function OrgSwitcher({ onAfter }: { onAfter?: () => void }) {
   )
 }
 
+type Aviso = { ico: string; titulo: string; texto: string; view: string }
 function Notificacoes() {
+  const { org } = useAuth()
+  const nav = useNav()
   const [open, setOpen] = useState(false)
+  const [itens, setItens] = useState<Aviso[]>([])
   const ref = useRef<HTMLDivElement>(null)
+  const ehArena = org?.tipo === 'arena'
+
+  useEffect(() => {
+    if (!org) { setItens([]); return }
+    let vivo = true
+    const hj = new Date(); const hoje = `${hj.getFullYear()}-${String(hj.getMonth() + 1).padStart(2, '0')}-${String(hj.getDate()).padStart(2, '0')}`
+    ;(async () => {
+      const out: Aviso[] = []
+      const [v, cob, inv, ms] = await Promise.all([
+        sb.rpc('meus_vinculos', { p_org: org.id }),
+        sb.from('cobrancas').select('vencimento').eq('org_id', org.id).eq('status', 'pendente'),
+        sb.from('inventory_items').select('quantidade,minimo,ativo').eq('org_id', org.id),
+        ehArena ? sb.from('maintenance_orders').select('id').eq('org_id', org.id).in('status', ['aberta', 'em_andamento'])
+          : sb.from('makeups').select('id').eq('org_id', org.id).eq('status', 'pendente'),
+      ])
+      if (!vivo) return
+      ;((v.data as { status: string; eu_criei: boolean; parceiro_nome: string }[]) ?? [])
+        .filter((x) => x.status === 'pendente' && !x.eu_criei)
+        .forEach((p) => out.push({ ico: '🤝', titulo: 'Convite de parceria', texto: `${p.parceiro_nome} aguarda sua resposta`, view: 'parceiros' }))
+      const venc = ((cob.data as { vencimento: string }[]) ?? []).filter((c) => c.vencimento < hoje).length
+      if (venc > 0) out.push({ ico: '💰', titulo: `${venc} cobrança(s) vencida(s)`, texto: 'Inadimplência para cobrar', view: 'financeiro' })
+      const low = ((inv.data as { quantidade: number; minimo: number; ativo: boolean }[]) ?? []).filter((i) => i.ativo && Number(i.quantidade) <= Number(i.minimo)).length
+      if (low > 0) out.push({ ico: '📦', titulo: `${low} item(ns) com estoque baixo`, texto: 'Repor no Estoque', view: 'estoque' })
+      const n = (ms.data as unknown[])?.length ?? 0
+      if (n > 0) out.push(ehArena
+        ? { ico: '🔧', titulo: `${n} chamado(s) de manutenção`, texto: 'Em aberto', view: 'manutencao' }
+        : { ico: '🔁', titulo: `${n} reposição(ões) pendente(s)`, texto: 'A agendar', view: 'reposicoes' })
+      if (vivo) setItens(out)
+    })()
+    return () => { vivo = false }
+  }, [org, ehArena])
+
   useEffect(() => {
     if (!open) return
     function fora(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
     document.addEventListener('mousedown', fora); return () => document.removeEventListener('mousedown', fora)
   }, [open])
+
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button type="button" className="ga-iconbtn" onClick={() => setOpen((o) => !o)} aria-label="Notificações" title="Notificações"><Icon name="bell" size={18} /></button>
+      <button type="button" className="ga-iconbtn" onClick={() => setOpen((o) => !o)} aria-label={`Notificações${itens.length ? ` (${itens.length})` : ''}`} title="Notificações">
+        <Icon name="bell" size={18} />{itens.length > 0 && <span className="dot" />}
+      </button>
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', width: 260, background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 14, zIndex: 40 }}>
-          <b style={{ fontSize: 13 }}>Notificações</b>
-          <p style={{ fontSize: 12, color: 'var(--tx2)', margin: '8px 0 0' }}>Sem novidades por aqui. A central de avisos (convites, pagamentos, manutenção) chega em breve.</p>
+        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', width: 288, maxWidth: '90vw', background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 8, zIndex: 40 }}>
+          <b style={{ fontSize: 13, display: 'block', padding: '4px 8px' }}>Notificações</b>
+          {itens.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '4px 8px 8px' }}>Tudo em dia por aqui. 🎉</p>
+            : itens.map((a, i) => (
+              <button key={i} className="ga-menuitem" style={{ alignItems: 'flex-start' }} onClick={() => { setOpen(false); nav(a.view) }}>
+                <span aria-hidden style={{ marginTop: 1 }}>{a.ico}</span>
+                <span style={{ textAlign: 'left' }}><b style={{ fontSize: 13, display: 'block' }}>{a.titulo}</b><span style={{ fontSize: 12, color: 'var(--tx2)' }}>{a.texto}</span></span>
+              </button>
+            ))}
         </div>
       )}
     </div>
