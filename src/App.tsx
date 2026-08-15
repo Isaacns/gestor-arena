@@ -18,12 +18,14 @@ import NovaOrg from './screens/NovaOrg'
 import Perfil from './screens/Perfil'
 import Professores from './screens/Professores'
 import Locais from './screens/Locais'
-import EmBreve from './screens/EmBreve'
 import Bloquear from './screens/Bloquear'
 import AceitarConvite from './screens/AceitarConvite'
 import Financeiro from './screens/Financeiro'
 import Clientes from './screens/Clientes'
 import Relatorios from './screens/Relatorios'
+import Estoque from './screens/Estoque'
+import Manutencao from './screens/Manutencao'
+import Reposicoes from './screens/Reposicoes'
 
 /* ---------- navegação entre telas (para CTAs e sub-telas) ---------- */
 const NavCtx = createContext<(id: string) => void>(() => {})
@@ -43,9 +45,6 @@ const NAV_ESCOLA: Nav[] = [
 ]
 
 // módulos das próximas ondas — tela on-brand que explica o módulo (menu já igual ao mockup)
-const Estoque = () => <EmBreve ico="📦" titulo="Estoque" descricao="Controle de itens da arena/escola: materiais esportivos, bar/lanchonete, uniformes." itens={['Cadastro de itens e categorias', 'Entradas e saídas com saldo', 'Alertas de estoque baixo']} />
-const Manutencao = () => <EmBreve ico="🔧" titulo="Manutenção" descricao="Ordens de manutenção das quadras e do espaço, para não perder reserva por quadra parada." itens={['Abrir chamado por quadra/unidade', 'Status: aberto → em andamento → concluído', 'Bloqueio da agenda durante a manutenção']} />
-const Reposicoes = () => <EmBreve ico="🔁" titulo="Reposições" descricao="Gestão de reposição de aulas: aluno que faltou remarca em outra turma/data." itens={['Registrar falta que gera direito a reposição', 'Agendar a reposição em turma compatível', 'Controle de reposições pendentes e realizadas']} />
 
 const TELAS: Record<string, () => JSX.Element> = {
   inicio: Dashboard, agenda: Agenda, alunos: Alunos, turmas: Turmas, professores: Professores, locais: Locais,
