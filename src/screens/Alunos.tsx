@@ -122,6 +122,7 @@ function EditarAluno({ aluno, onClose, onSaved }: { aluno: Partial<Student>; onC
       telefone: f.telefone || null, responsavel: f.responsavel || null,
       responsavel_telefone: f.responsavel_telefone || null, nivel: f.nivel || null,
       situacao: f.situacao ?? 'lead', origem: f.origem || null, obs: f.obs || null,
+      documento: f.documento || null,
     }
     const { error } = editando
       ? await sb.from('students').update(dados).eq('id', aluno.id!)
@@ -143,6 +144,7 @@ function EditarAluno({ aluno, onClose, onSaved }: { aluno: Partial<Student>; onC
         <Field label="Responsável"><input style={inp} value={f.responsavel ?? ''} onChange={(e) => set('responsavel', e.target.value)} /></Field>
         <Field label="Tel. responsável"><input style={inp} value={f.responsavel_telefone ?? ''} onChange={(e) => set('responsavel_telefone', e.target.value)} /></Field>
       </div>
+      <Field label="CPF do aluno/responsável (para cobrança)"><input style={inp} value={f.documento ?? ''} onChange={(e) => set('documento', e.target.value)} /></Field>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="Situação">
           <select style={inp} value={f.situacao ?? 'lead'} onChange={(e) => set('situacao', e.target.value as AlunoSituacao)}>

@@ -21,6 +21,7 @@ export interface Student {
   responsavel: string | null; responsavel_telefone: string | null
   data_nascimento: string | null; sport_id: string | null; nivel: string | null
   situacao: AlunoSituacao; origem: string | null; obs: string | null; criado_em: string
+  documento?: string | null
 }
 export interface Professional {
   id: string; org_id: string; nome: string; funcao: ProfFuncao
