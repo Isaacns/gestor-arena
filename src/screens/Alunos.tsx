@@ -54,7 +54,7 @@ export default function Alunos() {
             {podeEditar && <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setEdit({})}>Cadastrar aluno</button>}
           </Empty>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Nome', 'Contato', 'Nível', 'Situação', ''].map((h) => (
               <th key={h} style={th}>{h}</th>
             ))}</tr></thead>

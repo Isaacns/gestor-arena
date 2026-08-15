@@ -40,7 +40,7 @@ export default function Professores() {
           </Empty>
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Nome', 'Função', 'Contato', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map((p) => (
                 <tr key={p.id}>

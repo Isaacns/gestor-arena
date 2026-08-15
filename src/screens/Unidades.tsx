@@ -33,7 +33,7 @@ export default function Unidades() {
             {pode && <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setEdit({})}>Cadastrar unidade</button>}
           </Empty>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Nome', 'Endereço', 'Situação', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
             <tbody>{lista.map((u) => (
               <tr key={u.id}>

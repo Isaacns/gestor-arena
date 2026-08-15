@@ -35,7 +35,7 @@ export default function Locais() {
           </Empty>
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Nome', 'Endereço', 'Contato', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map((v) => (
                 <tr key={v.id}>

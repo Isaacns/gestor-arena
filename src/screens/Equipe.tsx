@@ -45,7 +45,7 @@ export default function Equipe() {
       </div>
       <div className="ga-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading ? <Loading /> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Nome', 'E-mail', 'Papel', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
             <tbody>{lista.map((m) => (
               <tr key={m.user_id}>

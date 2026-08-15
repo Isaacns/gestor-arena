@@ -45,7 +45,7 @@ export default function Estoque() {
           </Empty>
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Item', 'Categoria', 'Quantidade', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map((i) => {
                 const low = i.ativo && Number(i.quantidade) <= Number(i.minimo)

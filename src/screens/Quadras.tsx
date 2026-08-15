@@ -44,7 +44,7 @@ export default function Quadras() {
             {pode && <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setEdit({})}>Cadastrar quadra</button>}
           </Empty>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{['Quadra', 'Unidade', 'Modalidade', 'Estrutura', 'Situação', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
             <tbody>{courts.map((c) => (
               <tr key={c.id}>

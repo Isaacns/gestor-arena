@@ -42,7 +42,7 @@ export default function Clientes() {
           </Empty>
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Nome', 'Contato', 'Documento', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{visiveis.map((c) => (
                 <tr key={c.id}>

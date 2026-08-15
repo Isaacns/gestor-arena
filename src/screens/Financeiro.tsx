@@ -125,7 +125,7 @@ export default function Financeiro() {
           <Empty ico="💰" titulo="Nada por aqui neste mês" texto={ehEscola ? 'Gere as mensalidades do mês ou crie uma cobrança avulsa.' : 'Crie uma cobrança (locação, contrato, avulsa).'} />
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Sacado', 'Descrição', 'Vencimento', 'Valor', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{visiveis.map((c) => (
                 <tr key={c.id}>

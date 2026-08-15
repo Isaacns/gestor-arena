@@ -45,7 +45,7 @@ export default function Parceiros() {
             {pode && <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setConvidar(true)}>Convidar parceiro</button>}
           </Empty>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>{[ehArena ? 'Escolinha' : 'Arena', 'Cidade', 'Agenda', 'Status', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
             <tbody>{links.map((l) => (
               <tr key={l.id}>

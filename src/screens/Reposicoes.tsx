@@ -58,7 +58,7 @@ export default function Reposicoes() {
           </Empty>
         ) : (
           <div className="ga-tablewrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table className="ga-rt" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead><tr>{['Aluno', 'Faltou em', 'Repõe em', 'Status', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map((r) => (
                 <tr key={r.id}>
