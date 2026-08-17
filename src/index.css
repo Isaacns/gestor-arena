@@ -30,6 +30,7 @@
   --ease-brand:cubic-bezier(.22,.61,.36,1); --ease-inout:ease-in-out;
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0B1220; --bg2: rgba(255,255,255,.05); --card: #111E33; --card2: rgba(255,255,255,.04);
   --line: transparent; --line2: rgba(255,255,255,.10);
   --tx: #E2E8F0; --tx2: #94A3B8; --tx3: #64748B;
@@ -47,6 +48,9 @@ body {
 *::-webkit-scrollbar { display: none; }
 a { color: var(--brand); text-decoration: none; }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+select { color-scheme: dark; }
+option, optgroup { background-color: #10203A; color: #E2E8F0; }
+optgroup { color: #94A3B8; font-style: normal; }
 
 /* logo "A" geométrico */
 .ga-logo { display:inline-flex; align-items:center; gap:10px; }
