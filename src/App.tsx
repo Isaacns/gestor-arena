@@ -4,6 +4,7 @@ import { sb } from './lib/supabase'
 import { ToastHost } from './ui/kit'
 import { Logo, LogoMark } from './ui/Logo'
 import { Icon } from './ui/icons'
+import { AuraBackground } from './ui/AuraBackground'
 import Login from './screens/Login'
 import Onboarding from './screens/Onboarding'
 import Dashboard from './screens/Dashboard'
@@ -138,7 +139,7 @@ function Notificacoes() {
         <Icon name="bell" size={18} />{itens.length > 0 && <span className="dot" />}
       </button>
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', width: 288, maxWidth: '90vw', background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 8, zIndex: 40 }}>
+        <div className="ga-glass" style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', width: 288, maxWidth: '90vw', background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 8, zIndex: 40 }}>
           <b style={{ fontSize: 13, display: 'block', padding: '4px 8px' }}>Notificações</b>
           {itens.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '4px 8px 8px' }}>Tudo em dia por aqui. 🎉</p>
             : itens.map((a, i) => (
@@ -179,7 +180,7 @@ function UserMenu({ onPerfil, onLock }: { onPerfil: () => void; onLock: () => vo
         </span>
       </button>
       {open && (
-        <div role="menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', minWidth: 190, background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 6, zIndex: 40 }}>
+        <div role="menu" className="ga-glass" style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', minWidth: 190, background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 6, zIndex: 40 }}>
           <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onPerfil() }}>✏️ Editar perfil</button>
           <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onPerfil() }}>🔑 Alterar senha</button>
           <button role="menuitem" className="ga-menuitem" onClick={() => { setOpen(false); onLock() }}>🔒 Bloquear</button>
@@ -256,10 +257,11 @@ function Gate() {
 export default function App() {
   const params = new URLSearchParams(window.location.search)
   const portal = params.get('portal')
-  if (portal) return <ToastHost><PortalAluno token={portal} /></ToastHost>
+  if (portal) return <ToastHost><AuraBackground /><PortalAluno token={portal} /></ToastHost>
   const convite = params.get('convite')
   return (
     <ToastHost>
+      <AuraBackground />
       <AuthProvider>
         {convite
           ? <AceitarConvite token={convite} onDone={() => { window.history.replaceState({}, '', window.location.pathname); window.location.reload() }} />

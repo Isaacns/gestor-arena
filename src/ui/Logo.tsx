@@ -1,6 +1,10 @@
 // Logomarca oficial do Gestor Arena — marca "A" de fita, extraída do mockup oficial (web/public/logo-mark.png).
 export function LogoMark({ size = 34 }: { size?: number }) {
-  return <img src="/logo-mark.png" width={size} height={size} alt="Gestor Arena" style={{ display: 'block', objectFit: 'contain' }} />
+  return (
+    <span className="ga-mark">
+      <img src="/logo-mark.png" width={size} height={size} alt="Gestor Arena" style={{ display: 'block', objectFit: 'contain' }} />
+    </span>
+  )
 }
 
 // Logo completo (marca + wordmark) para sidebar e login. "GESTOR" herda a cor do contexto; "ARENA" no azul da marca.

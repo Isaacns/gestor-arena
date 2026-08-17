@@ -93,6 +93,38 @@ a { color: var(--brand); text-decoration: none; }
   table.ga-rt td:empty{ display:none; }
 }
 
+/* ============================================================
+   TEMA AURA CONSTELAÇÃO + LIQUID GLASS (superfícies glass)
+   A luz do AURA (aura.js) fica em z-index:0 atrás; o conteúdo acima.
+   Glass só na chrome/KPIs — nunca sobre tabela/gráfico denso.
+   ============================================================ */
+body { background: var(--bg); }
+#root { position: relative; z-index: 1; }
+.ga-aura { display: none; } /* substituído pelo aura.js (perfil Constelação) */
+
+/* chrome flutuante translúcido */
+.ga-side { background: rgba(9,20,38,.60); backdrop-filter: blur(16px) saturate(1.2); border-right: 1px solid var(--line2); }
+.ga-top { background: rgba(17,30,51,.58); backdrop-filter: blur(16px) saturate(1.3); border-bottom: 1px solid var(--line2); }
+.ga-kpi { background: rgba(17,30,51,.52) !important; backdrop-filter: blur(10px); }
+.ga-glass { background: rgba(17,30,51,.9) !important; backdrop-filter: blur(18px) saturate(1.3); }
+
+/* respiração da marca (pulseLogo 3.4s) + halo gerado (contorno) — sempre no azul da marca */
+@keyframes ga-pulse { 0%,100%{ transform:scale(1); filter:drop-shadow(0 4px 12px rgba(23,105,255,.30)); } 50%{ transform:scale(1.05); filter:drop-shadow(0 6px 18px rgba(56,189,248,.5)); } }
+@keyframes ga-halo { 0%,100%{ opacity:.35; transform:scale(1); } 50%{ opacity:.8; transform:scale(1.12); } }
+.ga-mark { position:relative; display:inline-flex; }
+.ga-mark img { position:relative; z-index:1; animation:ga-pulse 3.4s ease-in-out infinite; }
+.ga-mark::after { content:""; position:absolute; inset:-7px; border-radius:50%; pointer-events:none; z-index:0;
+  background:radial-gradient(circle, rgba(56,189,248,.30), transparent 68%); filter:blur(8px); animation:ga-halo 3.4s ease-in-out infinite; }
+
+/* acessibilidade: sem suporte a glass OU transparência reduzida → superfície sólida */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ga-side, .ga-top, .ga-kpi, .ga-glass { background: var(--card) !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .ga-side, .ga-top, .ga-kpi, .ga-glass { backdrop-filter: none !important; background: var(--card) !important; }
+}
+@media (prefers-reduced-motion: reduce) { .ga-mark img, .ga-mark::after { animation: none !important; } }
+
 /* chips de status (Ativo / A vencer / Atrasado / Cancelado / info) */
 .ga-chip { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; white-space:nowrap; }
 .ga-chip::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.9; }
