@@ -33,7 +33,9 @@
   color-scheme: dark;
   --bg: #0B1220; --bg2: rgba(255,255,255,.05); --card: #111E33; --card2: rgba(255,255,255,.04);
   --line: transparent; --line2: rgba(255,255,255,.10);
-  --tx: #E2E8F0; --tx2: #94A3B8; --tx3: #64748B;
+  --tx: #E2E8F0; --tx2: #94A3B8; --tx3: #8592A6;
+  /* acento clareado para legibilidade de texto/links sobre o dark (botões seguem vibrantes) */
+  --brand: #4D90FF; --brand-deep: #1769FF;
   --card-shadow: 0 8px 30px rgba(0,0,0,.32);
 }
 
@@ -118,6 +120,12 @@ body { background: var(--bg); }
 .ga-card table td, .ga-card table th { border-bottom: 1px solid rgba(255,255,255,.05) !important; }
 .ga-card table tr:last-child td { border-bottom: none !important; }
 @media (max-width:640px){ table.ga-rt td, table.ga-rt th { border-bottom: none !important; } }
+/* chips clareados no dark (as cores originais eram para o tema claro) */
+:root[data-theme="dark"] .ga-chip-ok { color:#34D399; background:rgba(52,211,153,.14); }
+:root[data-theme="dark"] .ga-chip-warn { color:#FBBF24; background:rgba(251,191,36,.15); }
+:root[data-theme="dark"] .ga-chip-danger { color:#F87171; background:rgba(248,113,113,.15); }
+:root[data-theme="dark"] .ga-chip-info { color:#60A5FA; background:rgba(96,165,250,.15); }
+:root[data-theme="dark"] .ga-chip-muted { color:#9FB0C4; background:rgba(159,176,196,.14); }
 
 /* respiração da marca (pulseLogo 3.4s) + halo gerado (contorno) — sempre no azul da marca */
 @keyframes ga-pulse { 0%,100%{ transform:scale(1); filter:drop-shadow(0 4px 12px rgba(23,105,255,.30)); } 50%{ transform:scale(1.05); filter:drop-shadow(0 6px 18px rgba(56,189,248,.5)); } }
