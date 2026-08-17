@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
+import { useAbrirFicha } from '../lib/focus'
 import type { AlunoSituacao, Student } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
@@ -23,6 +24,7 @@ export default function Alunos() {
   const [edit, setEdit] = useState<Partial<Student> | null>(null)
   const [portalDe, setPortalDe] = useState<Student | null>(null)
   const [detalhe, setDetalhe] = useState<Student | null>(null)
+  useAbrirFicha('alunos', lista, setDetalhe) // busca global → abre a ficha do aluno
   const podeEditar = ['owner', 'admin', 'gerente', 'coordenador', 'recepcao'].includes(role ?? '')
 
   async function carregar() {

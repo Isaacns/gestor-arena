@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
+import { useAbrirFicha } from '../lib/focus'
 import type { AgendaQuadra, ClassRow, Enrollment, ExternalVenue, PresencaStatus, Professional, Student } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
@@ -24,6 +25,7 @@ export default function Turmas() {
   const [ocup, setOcup] = useState<Record<string, number>>({})
   const [criar, setCriar] = useState(false)
   const [gerir, setGerir] = useState<ClassRow | null>(null)
+  useAbrirFicha('turmas', turmas, setGerir) // busca global → abre a gestão da turma
   const podeGerir = ['owner', 'admin', 'gerente', 'coordenador'].includes(role ?? '')
 
   async function carregar() {

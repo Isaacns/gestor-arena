@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
+import { useAbrirFicha } from '../lib/focus'
 import type { Professional, ProfFuncao } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, ErroCarregar, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
@@ -17,6 +18,7 @@ export default function Professores() {
   const [lista, setLista] = useState<Professional[]>([])
   const [edit, setEdit] = useState<Partial<Professional> | null>(null)
   const [detalhe, setDetalhe] = useState<Professional | null>(null)
+  useAbrirFicha('professores', lista, setDetalhe) // busca global → abre a ficha do profissional
   const pode = ['owner', 'admin', 'gerente', 'coordenador'].includes(role ?? '')
 
   async function carregar() {

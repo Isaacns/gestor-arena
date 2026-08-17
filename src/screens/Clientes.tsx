@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
+import { useAbrirFicha } from '../lib/focus'
 import { Badge, BtnGhost, BtnSm, Empty, ErroCarregar, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
 interface Customer { id: string; org_id: string; nome: string; telefone: string | null; email: string | null; documento: string | null; obs: string | null; ativo: boolean }
@@ -12,6 +13,7 @@ export default function Clientes() {
   const [lista, setLista] = useState<Customer[]>([])
   const [busca, setBusca] = useState('')
   const [edit, setEdit] = useState<Partial<Customer> | null>(null)
+  useAbrirFicha('clientes', lista, setEdit) // busca global → abre o cadastro do cliente
   const pode = ['owner', 'admin', 'gerente', 'recepcao', 'operacional'].includes(role ?? '')
 
   async function carregar() {

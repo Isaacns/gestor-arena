@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
+import { useAbrirFicha } from '../lib/focus'
 import type { AgendaReserva, Court, Sport, Unit } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
@@ -13,6 +14,7 @@ export default function Quadras() {
   const [sports, setSports] = useState<Sport[]>([])
   const [edit, setEdit] = useState<Partial<Court> | null>(null)
   const [detalhe, setDetalhe] = useState<Court | null>(null)
+  useAbrirFicha('quadras', courts, setDetalhe) // busca global → abre a ficha da quadra
   const pode = ['owner', 'admin', 'gerente', 'operacional'].includes(role ?? '')
 
   async function carregar() {

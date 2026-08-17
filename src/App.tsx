@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type JSX } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { sb } from './lib/supabase'
+import { FocusCtx, type Foco } from './lib/focus'
 import { ToastHost } from './ui/kit'
 import { Logo, LogoMark } from './ui/Logo'
 import { Icon } from './ui/icons'
@@ -31,7 +32,7 @@ import Manutencao from './screens/Manutencao'
 import Reposicoes from './screens/Reposicoes'
 
 /* ---------- navegação entre telas (para CTAs e sub-telas) ---------- */
-const NavCtx = createContext<(id: string) => void>(() => {})
+const NavCtx = createContext<(id: string, focusId?: string) => void>(() => {})
 export function useNav() { return useContext(NavCtx) }
 
 type Nav = [id: string, ico: string, label: string]
@@ -239,7 +240,7 @@ function GlobalSearch() {
     document.addEventListener('mousedown', fora); return () => document.removeEventListener('mousedown', fora)
   }, [open])
 
-  function abrir(a: Achado) { nav(a.view); setQ(''); setRes([]); setOpen(false) }
+  function abrir(a: Achado) { nav(a.view, a.id); setQ(''); setRes([]); setOpen(false) }
 
   return (
     <div ref={ref} className="ga-search-wrap ga-hide-mob" style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
@@ -275,6 +276,7 @@ function Shell() {
   const [perfil, setPerfil] = useState(false)
   const [locked, setLocked] = useState(false)
   const [drawer, setDrawer] = useState(false)
+  const [foco, setFoco] = useState<Foco>(null)
   const nav = org?.tipo === 'arena' ? NAV_ARENA : NAV_ESCOLA
 
   const [orgAnterior, setOrgAnterior] = useState(org?.id)
@@ -282,10 +284,11 @@ function Shell() {
   const viewValida = nav.some((n) => n[0] === view) ? view : 'inicio'
   const Tela = TELAS[viewValida] ?? Dashboard
 
-  function navegar(id: string) { if (TELAS[id]) { setView(id); setDrawer(false) } }
+  function navegar(id: string, focusId?: string) { if (TELAS[id]) { setView(id); setDrawer(false); setFoco(focusId ? { view: id, id: focusId } : null) } }
 
   return (
     <NavCtx.Provider value={navegar}>
+     <FocusCtx.Provider value={{ foco, limpar: () => setFoco(null) }}>
       <div className="ga-shell">
         <div className="ga-aura" aria-hidden />
         <aside className="ga-side"><SideNav nav={nav} view={viewValida} onNavigate={navegar} /></aside>
@@ -311,6 +314,7 @@ function Shell() {
         {perfil && <Perfil onClose={() => setPerfil(false)} />}
         {locked && <Bloquear onUnlock={() => setLocked(false)} />}
       </div>
+     </FocusCtx.Provider>
     </NavCtx.Provider>
   )
 }
