@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 
 /* ---------- Toast ---------- */
 type Toast = { id: number; msg: string; err?: boolean }
@@ -75,14 +76,15 @@ export function Modal({ title, children, onClose }: { title: string; children: R
       anterior?.focus?.()
     }
   }, [])
-  return (
+  return createPortal(
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(7,28,54,.45)', zIndex: 60, display: 'grid', placeItems: 'center', padding: 18 }}>
+      style={{ position: 'fixed', inset: 0, background: 'rgba(7,28,54,.55)', zIndex: 60, display: 'grid', placeItems: 'center', padding: 18 }}>
       <div ref={ref} role="dialog" aria-modal aria-labelledby={titleId} className="ga-glass" style={{ background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto', padding: 24, boxShadow: 'var(--card-shadow)' }}>
         <h3 id={titleId} style={{ fontSize: 17, fontWeight: 700, margin: '0 0 16px' }}>{title}</h3>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 export function Foot({ children }: { children: ReactNode }) {

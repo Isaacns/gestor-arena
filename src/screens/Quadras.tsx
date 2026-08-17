@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
-import type { Court, Sport, Unit } from '../lib/database.types'
+import type { AgendaReserva, Court, Sport, Unit } from '../lib/database.types'
 import { Badge, BtnGhost, BtnSm, Empty, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
 
 export default function Quadras() {
@@ -12,6 +12,7 @@ export default function Quadras() {
   const [units, setUnits] = useState<Unit[]>([])
   const [sports, setSports] = useState<Sport[]>([])
   const [edit, setEdit] = useState<Partial<Court> | null>(null)
+  const [detalhe, setDetalhe] = useState<Court | null>(null)
   const pode = ['owner', 'admin', 'gerente', 'operacional'].includes(role ?? '')
 
   async function carregar() {
@@ -48,7 +49,7 @@ export default function Quadras() {
             <thead><tr>{['Quadra', 'Unidade', 'Modalidade', 'Estrutura', 'Situação', ''].map((h) => <th key={h} style={th}>{h}</th>)}</tr></thead>
             <tbody>{courts.map((c) => (
               <tr key={c.id}>
-                <td style={td}><b>{c.nome}</b></td>
+                <td style={td}><button type="button" onClick={() => setDetalhe(c)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--brand)', font: 'inherit', fontWeight: 700, textAlign: 'left' }}>{c.nome}</button></td>
                 <td style={td}>{nomeUnit(c.unit_id)}</td>
                 <td style={td}>{nomeSport(c.sport_id)}</td>
                 <td style={td}>{[c.coberta && 'coberta', c.iluminacao && 'iluminação'].filter(Boolean).join(' · ') || '—'}</td>
@@ -60,7 +61,43 @@ export default function Quadras() {
         )}
       </div>
       {edit && <EditarQuadra quadra={edit} units={units} sports={sports} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); void carregar() }} />}
+      {detalhe && <DetalheQuadra quadra={detalhe} unidade={nomeUnit(detalhe.unit_id)} modalidade={nomeSport(detalhe.sport_id)} onClose={() => setDetalhe(null)} />}
     </div>
+  )
+}
+
+function DetalheQuadra({ quadra, unidade, modalidade, onClose }: { quadra: Court; unidade: string; modalidade: string; onClose: () => void }) {
+  const { org } = useAuth()
+  const [reservas, setReservas] = useState<AgendaReserva[]>([])
+  const [loading, setLoading] = useState(true)
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  const fmt = (s: string) => s.split('-').reverse().slice(0, 2).join('/')
+  useEffect(() => {
+    if (!org) return
+    let vivo = true
+    const hoje = new Date(); const ate = new Date(); ate.setDate(ate.getDate() + 30)
+    void sb.rpc('agenda_reservas', { p_org: org.id, p_court_ids: [quadra.id], p_de: iso(hoje), p_ate: iso(ate) })
+      .then(({ data }) => { if (!vivo) return; const r = ((data as AgendaReserva[]) ?? []).sort((a, b) => (a.data + a.hora_inicio).localeCompare(b.data + b.hora_inicio)); setReservas(r); setLoading(false) })
+    return () => { vivo = false }
+  }, [quadra.id, org])
+  return (
+    <Modal title={quadra.nome} onClose={onClose}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        <Badge color={quadra.ativo ? '#16A34A' : '#94A3B8'}>{quadra.ativo ? 'Ativa' : 'Inativa'}</Badge>
+        <span style={{ fontSize: 13, color: 'var(--tx2)' }}>📍 {unidade}</span>
+        <span style={{ fontSize: 13, color: 'var(--tx2)' }}>🏐 {modalidade}</span>
+        {(quadra.coberta || quadra.iluminacao) && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{[quadra.coberta && 'coberta', quadra.iluminacao && 'iluminação'].filter(Boolean).join(' · ')}</span>}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Próximas reservas (30 dias)</div>
+      {loading ? <Loading /> : reservas.length === 0 ? <p style={{ fontSize: 13, color: 'var(--tx2)' }}>Nenhuma reserva nos próximos 30 dias.</p>
+        : reservas.slice(0, 20).map((r) => (
+          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '5px 0' }}>
+            <span><b>{fmt(r.data)}</b> · {r.hora_inicio.slice(0, 5)}–{r.hora_fim.slice(0, 5)}</span>
+            <span style={{ color: 'var(--tx2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.titulo || r.tipo || 'Reserva'}</span>
+          </div>
+        ))}
+      <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Fechar</button></Foot>
+    </Modal>
   )
 }
 

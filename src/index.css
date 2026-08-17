@@ -110,6 +110,10 @@ body { background: var(--bg); }
 .ga-glass { background: rgba(17,30,51,.82) !important; backdrop-filter: blur(20px) saturate(1.4); }
 .ga-ag-scroll, .ga-tablewrap { border: none !important; }
 .ga-nav.on { box-shadow: 0 6px 18px rgba(23,105,255,.30); }
+/* separador ultrassutil só nas linhas de tabela (legibilidade); some no mobile-card */
+.ga-card table td, .ga-card table th { border-bottom: 1px solid rgba(255,255,255,.05) !important; }
+.ga-card table tr:last-child td { border-bottom: none !important; }
+@media (max-width:640px){ table.ga-rt td, table.ga-rt th { border-bottom: none !important; } }
 
 /* respiração da marca (pulseLogo 3.4s) + halo gerado (contorno) — sempre no azul da marca */
 @keyframes ga-pulse { 0%,100%{ transform:scale(1); filter:drop-shadow(0 4px 12px rgba(23,105,255,.30)); } 50%{ transform:scale(1.05); filter:drop-shadow(0 6px 18px rgba(56,189,248,.5)); } }
