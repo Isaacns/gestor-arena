@@ -192,13 +192,72 @@ function UserMenu({ onPerfil, onLock }: { onPerfil: () => void; onLock: () => vo
   )
 }
 
+type Achado = { tipo: string; nome: string; view: string; id: string }
+function GlobalSearch() {
+  const { org } = useAuth()
+  const nav = useNav()
+  const [q, setQ] = useState('')
+  const [res, setRes] = useState<Achado[]>([])
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const ehArena = org?.tipo === 'arena'
+
+  useEffect(() => {
+    const t = q.trim()
+    if (!org || t.length < 2) { setRes([]); setOpen(false); return }
+    let vivo = true
+    setBusy(true)
+    const h = setTimeout(async () => {
+      const like = `%${t}%`
+      const defs = ehArena
+        ? [['customers', 'Cliente', 'clientes'], ['courts', 'Quadra', 'quadras']] as const
+        : [['students', 'Aluno', 'alunos'], ['classes', 'Turma', 'turmas'], ['professionals', 'Professor', 'professores']] as const
+      const rows = await Promise.all(defs.map(([tab]) => sb.from(tab).select('id,nome').eq('org_id', org.id).ilike('nome', like).limit(6)))
+      if (!vivo) return
+      const out: Achado[] = []
+      rows.forEach((r, i) => ((r.data as { id: string; nome: string }[]) ?? []).forEach((x) => out.push({ tipo: defs[i][1], nome: x.nome, view: defs[i][2], id: x.id })))
+      setRes(out); setOpen(true); setBusy(false)
+    }, 250)
+    return () => { vivo = false; clearTimeout(h) }
+  }, [q, org, ehArena])
+
+  useEffect(() => {
+    if (!open) return
+    function fora(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', fora); return () => document.removeEventListener('mousedown', fora)
+  }, [open])
+
+  function abrir(a: Achado) { nav(a.view); setQ(''); setRes([]); setOpen(false) }
+
+  return (
+    <div ref={ref} className="ga-search-wrap ga-hide-mob" style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
+      <label className="ga-search" style={{ maxWidth: 'none' }}>
+        <span aria-hidden style={{ display: 'flex', color: 'var(--tx3)' }}><Icon name="search" size={16} /></span>
+        <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => { if (res.length) setOpen(true) }} placeholder="Buscar aluno, cliente, turma…" aria-label="Buscar" />
+      </label>
+      {open && q.trim().length >= 2 && (
+        <div className="ga-glass" style={{ position: 'absolute', left: 0, right: 0, top: 'calc(100% + 6px)', background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 6, zIndex: 45, maxHeight: 360, overflowY: 'auto' }}>
+          {busy && res.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '8px 10px' }}>Buscando…</p>
+            : res.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '8px 10px' }}>Nada encontrado.</p>
+              : res.map((a) => (
+                <button key={a.view + a.id} className="ga-menuitem" onClick={() => abrir(a)}>
+                  <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.nome}</span>
+                  <span style={{ fontSize: 11, color: 'var(--tx3)', flex: 'none' }}>{a.tipo}</span>
+                </button>
+              ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Shell() {
   const { org } = useAuth()
   const [view, setView] = useState('inicio')
   const [perfil, setPerfil] = useState(false)
   const [locked, setLocked] = useState(false)
   const [drawer, setDrawer] = useState(false)
-  const [busca, setBusca] = useState('')
   const nav = org?.tipo === 'arena' ? NAV_ARENA : NAV_ESCOLA
 
   const [orgAnterior, setOrgAnterior] = useState(org?.id)
@@ -207,11 +266,6 @@ function Shell() {
   const Tela = TELAS[viewValida] ?? Dashboard
 
   function navegar(id: string) { if (TELAS[id]) { setView(id); setDrawer(false) } }
-  function buscar() {
-    const t = busca.trim().toLowerCase(); if (!t) return
-    const alvo = nav.find((n) => n[2].toLowerCase().includes(t))
-    if (alvo) { setView(alvo[0]); setBusca('') }
-  }
 
   return (
     <NavCtx.Provider value={navegar}>
@@ -230,9 +284,7 @@ function Shell() {
           <header className="ga-top">
             <button type="button" className="ga-ham" onClick={() => setDrawer(true)} aria-label="Abrir menu" title="Menu">☰</button>
             <div className="ga-topbar-org ga-hide-mob"><OrgSwitcher /></div>
-            <label className="ga-search"><span aria-hidden style={{ display: 'flex', color: 'var(--tx3)' }}><Icon name="search" size={16} /></span>
-              <input value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') buscar() }} placeholder="Buscar…" aria-label="Buscar" />
-            </label>
+            <GlobalSearch />
             <div style={{ flex: 1 }} />
             <Notificacoes />
             <UserMenu onPerfil={() => setPerfil(true)} onLock={() => setLocked(true)} />
