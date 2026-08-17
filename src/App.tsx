@@ -200,8 +200,19 @@ function GlobalSearch() {
   const [res, setRes] = useState<Achado[]>([])
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [sel, setSel] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const ehArena = org?.tipo === 'arena'
+
+  useEffect(() => {
+    function key(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing)) { e.preventDefault(); inputRef.current?.focus() }
+    }
+    document.addEventListener('keydown', key); return () => document.removeEventListener('keydown', key)
+  }, [])
 
   useEffect(() => {
     const t = q.trim()
@@ -217,7 +228,7 @@ function GlobalSearch() {
       if (!vivo) return
       const out: Achado[] = []
       rows.forEach((r, i) => ((r.data as { id: string; nome: string }[]) ?? []).forEach((x) => out.push({ tipo: defs[i][1], nome: x.nome, view: defs[i][2], id: x.id })))
-      setRes(out); setOpen(true); setBusy(false)
+      setRes(out); setSel(0); setOpen(true); setBusy(false)
     }, 250)
     return () => { vivo = false; clearTimeout(h) }
   }, [q, org, ehArena])
@@ -234,14 +245,20 @@ function GlobalSearch() {
     <div ref={ref} className="ga-search-wrap ga-hide-mob" style={{ position: 'relative', flex: 1, maxWidth: 420 }}>
       <label className="ga-search" style={{ maxWidth: 'none' }}>
         <span aria-hidden style={{ display: 'flex', color: 'var(--tx3)' }}><Icon name="search" size={16} /></span>
-        <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => { if (res.length) setOpen(true) }} placeholder="Buscar aluno, cliente, turma…" aria-label="Buscar" />
+        <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => { if (res.length) setOpen(true) }} placeholder="Buscar…  ( / )" aria-label="Buscar"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setSel((s) => Math.min(s + 1, res.length - 1)) }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); setSel((s) => Math.max(s - 1, 0)) }
+            else if (e.key === 'Enter') { if (res[sel]) abrir(res[sel]) }
+            else if (e.key === 'Escape') { setQ(''); setOpen(false); inputRef.current?.blur() }
+          }} />
       </label>
       {open && q.trim().length >= 2 && (
         <div className="ga-glass" style={{ position: 'absolute', left: 0, right: 0, top: 'calc(100% + 6px)', background: 'var(--card)', border: '1px solid var(--line2)', borderRadius: 12, boxShadow: 'var(--card-shadow)', padding: 6, zIndex: 45, maxHeight: 360, overflowY: 'auto' }}>
           {busy && res.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '8px 10px' }}>Buscando…</p>
             : res.length === 0 ? <p style={{ fontSize: 12, color: 'var(--tx2)', padding: '8px 10px' }}>Nada encontrado.</p>
-              : res.map((a) => (
-                <button key={a.view + a.id} className="ga-menuitem" onClick={() => abrir(a)}>
+              : res.map((a, i) => (
+                <button key={a.view + a.id} className="ga-menuitem" onMouseEnter={() => setSel(i)} onClick={() => abrir(a)} style={{ background: i === sel ? 'var(--bg2)' : undefined }}>
                   <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.nome}</span>
                   <span style={{ fontSize: 11, color: 'var(--tx3)', flex: 'none' }}>{a.tipo}</span>
                 </button>
