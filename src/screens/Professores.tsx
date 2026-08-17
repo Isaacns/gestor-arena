@@ -16,6 +16,7 @@ export default function Professores() {
   const [erro, setErro] = useState(false)
   const [lista, setLista] = useState<Professional[]>([])
   const [edit, setEdit] = useState<Partial<Professional> | null>(null)
+  const [detalhe, setDetalhe] = useState<Professional | null>(null)
   const pode = ['owner', 'admin', 'gerente', 'coordenador'].includes(role ?? '')
 
   async function carregar() {
@@ -44,7 +45,7 @@ export default function Professores() {
               <thead><tr>{['Nome', 'Função', 'Contato', 'Situação', ''].map((h) => <th key={h} scope="col" style={th}>{h}</th>)}</tr></thead>
               <tbody>{lista.map((p) => (
                 <tr key={p.id}>
-                  <td style={td}><b>{p.nome}</b></td>
+                  <td style={td}><button type="button" onClick={() => setDetalhe(p)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--brand)', font: 'inherit', fontWeight: 700, textAlign: 'left' }}>{p.nome}</button></td>
                   <td style={td}>{rotuloFuncao(p.funcao)}</td>
                   <td style={td}>{[p.telefone, p.email].filter(Boolean).join(' · ') || '—'}</td>
                   <td style={td}><Badge color={p.ativo ? '#16A34A' : '#94A3B8'}>{p.ativo ? 'Ativo' : 'Inativo'}</Badge></td>
@@ -56,7 +57,40 @@ export default function Professores() {
         )}
       </div>
       {edit && <EditarProf prof={edit} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); void carregar() }} />}
+      {detalhe && <DetalheProfessor prof={detalhe} onClose={() => setDetalhe(null)} />}
     </div>
+  )
+}
+
+function DetalheProfessor({ prof, onClose }: { prof: Professional; onClose: () => void }) {
+  const { org } = useAuth()
+  const [turmas, setTurmas] = useState<{ nome: string; dias_semana: number[] | null; hora_inicio: string | null; hora_fim: string | null; ativo: boolean }[]>([])
+  const [loading, setLoading] = useState(true)
+  const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+  useEffect(() => {
+    if (!org) return
+    let vivo = true
+    void sb.from('classes').select('nome,dias_semana,hora_inicio,hora_fim,ativo').eq('org_id', org.id).eq('professor_id', prof.id).order('nome')
+      .then(({ data }) => { if (vivo) { setTurmas((data as typeof turmas) ?? []); setLoading(false) } })
+    return () => { vivo = false }
+  }, [prof.id, org])
+  const ativas = turmas.filter((t) => t.ativo)
+  return (
+    <Modal title={prof.nome} onClose={onClose}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        <Badge color={prof.ativo ? '#16A34A' : '#94A3B8'}>{rotuloFuncao(prof.funcao)}</Badge>
+        {prof.telefone && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>📞 {prof.telefone}</span>}
+        {prof.email && <span style={{ fontSize: 13, color: 'var(--tx2)' }}>✉️ {prof.email}</span>}
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Turmas ({ativas.length} ativa{ativas.length === 1 ? '' : 's'})</div>
+      {loading ? <Loading /> : ativas.length === 0 ? <p style={{ fontSize: 13, color: 'var(--tx2)' }}>Nenhuma turma ativa com este profissional.</p>
+        : ativas.map((t, i) => (
+          <div key={i} style={{ fontSize: 13, padding: '5px 0', borderBottom: '1px solid var(--line)' }}>
+            <b>{t.nome}</b> <span style={{ color: 'var(--tx2)' }}>{(t.dias_semana ?? []).map((d) => DIAS[d]).join(', ')}{t.hora_inicio ? ` · ${t.hora_inicio.slice(0, 5)}${t.hora_fim ? '–' + t.hora_fim.slice(0, 5) : ''}` : ''}</span>
+          </div>
+        ))}
+      <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Fechar</button></Foot>
+    </Modal>
   )
 }
 
