@@ -30,10 +30,10 @@
   --ease-brand:cubic-bezier(.22,.61,.36,1); --ease-inout:ease-in-out;
 }
 :root[data-theme="dark"] {
-  --bg: #0B1220; --bg2: #0F1B2E; --card: #111E33; --card2: #0E1A2C;
-  --line: rgba(148,163,184,.15); --line2: rgba(148,163,184,.26);
+  --bg: #0B1220; --bg2: rgba(255,255,255,.05); --card: #111E33; --card2: rgba(255,255,255,.04);
+  --line: transparent; --line2: rgba(255,255,255,.10);
   --tx: #E2E8F0; --tx2: #94A3B8; --tx3: #64748B;
-  --card-shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 20px rgba(0,0,0,.35);
+  --card-shadow: 0 8px 30px rgba(0,0,0,.32);
 }
 
 * { box-sizing: border-box; }
@@ -102,11 +102,14 @@ body { background: var(--bg); }
 #root { position: relative; z-index: 1; }
 .ga-aura { display: none; } /* substituído pelo aura.js (perfil Constelação) */
 
-/* chrome flutuante translúcido */
-.ga-side { background: rgba(9,20,38,.60); backdrop-filter: blur(16px) saturate(1.2); border-right: 1px solid var(--line2); }
-.ga-top { background: rgba(17,30,51,.58); backdrop-filter: blur(16px) saturate(1.3); border-bottom: 1px solid var(--line2); }
-.ga-kpi { background: rgba(17,30,51,.52) !important; backdrop-filter: blur(10px); }
-.ga-glass { background: rgba(17,30,51,.9) !important; backdrop-filter: blur(18px) saturate(1.3); }
+/* superfícies translúcidas (liquid glass, estilo Apple) — sem linhas */
+.ga-side { background: rgba(9,20,38,.55); backdrop-filter: blur(20px) saturate(1.3); border: none; }
+.ga-top { background: rgba(17,30,51,.5); backdrop-filter: blur(20px) saturate(1.4); border: none; }
+.ga-card { background: rgba(18,30,52,.48) !important; backdrop-filter: blur(16px) saturate(1.25); border: none !important; }
+.ga-kpi { background: rgba(18,30,52,.42) !important; }
+.ga-glass { background: rgba(17,30,51,.82) !important; backdrop-filter: blur(20px) saturate(1.4); }
+.ga-ag-scroll, .ga-tablewrap { border: none !important; }
+.ga-nav.on { box-shadow: 0 6px 18px rgba(23,105,255,.30); }
 
 /* respiração da marca (pulseLogo 3.4s) + halo gerado (contorno) — sempre no azul da marca */
 @keyframes ga-pulse { 0%,100%{ transform:scale(1); filter:drop-shadow(0 4px 12px rgba(23,105,255,.30)); } 50%{ transform:scale(1.05); filter:drop-shadow(0 6px 18px rgba(56,189,248,.5)); } }
@@ -118,10 +121,10 @@ body { background: var(--bg); }
 
 /* acessibilidade: sem suporte a glass OU transparência reduzida → superfície sólida */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .ga-side, .ga-top, .ga-kpi, .ga-glass { background: var(--card) !important; }
+  .ga-side, .ga-top, .ga-card, .ga-kpi, .ga-glass { background: var(--card) !important; }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .ga-side, .ga-top, .ga-kpi, .ga-glass { backdrop-filter: none !important; background: var(--card) !important; }
+  .ga-side, .ga-top, .ga-card, .ga-kpi, .ga-glass { backdrop-filter: none !important; background: var(--card) !important; }
 }
 @media (prefers-reduced-motion: reduce) { .ga-mark img, .ga-mark::after { animation: none !important; } }
 

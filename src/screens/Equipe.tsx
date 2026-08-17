@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import type { AppRole, MembershipRow } from '../lib/database.types'
-import { BtnGhost, BtnSm, Field, Foot, Loading, Modal, errMsg, inp, useToast } from '../ui/kit'
+import { BtnGhost, BtnSm, Field, Foot, Loading, Modal, PasswordInput, errMsg, inp, useToast } from '../ui/kit'
 
 const PAPEIS: AppRole[] = ['admin', 'gerente', 'financeiro', 'recepcao', 'operacional', 'coordenador', 'professor', 'visualizador']
 const ROTULO: Record<string, string> = { owner: 'Proprietário', admin: 'Administrador', gerente: 'Gerente', financeiro: 'Financeiro', recepcao: 'Recepção', operacional: 'Operacional', coordenador: 'Coordenador', professor: 'Professor', visualizador: 'Visualizador' }
@@ -14,6 +14,7 @@ export default function Equipe() {
   const [lista, setLista] = useState<MembershipRow[]>([])
   const [add, setAdd] = useState(false)
   const [link, setLink] = useState(false)
+  const [criar, setCriar] = useState(false)
   const [editar, setEditar] = useState<MembershipRow | null>(null)
   const podeAdmin = ['owner', 'admin'].includes(role ?? '')
 
@@ -38,7 +39,8 @@ export default function Equipe() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
         <span style={{ fontSize: 13, color: 'var(--tx2)' }}>{lista.length} pessoa(s)</span>
-        {podeAdmin && <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+        {podeAdmin && <div style={{ display: 'flex', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <BtnSm onClick={() => setCriar(true)}>➕ Criar usuário</BtnSm>
           <BtnSm onClick={() => setLink(true)}>🔗 Convidar por link</BtnSm>
           <button className="ga-btn" style={{ width: 'auto' }} onClick={() => setAdd(true)}>Adicionar pessoa</button>
         </div>}
@@ -65,6 +67,7 @@ export default function Equipe() {
       </div>
       {add && <AddMembro onClose={() => setAdd(false)} onSaved={() => { setAdd(false); void carregar() }} />}
       {link && <ConvidarLink onClose={() => setLink(false)} />}
+      {criar && <CriarUsuario onClose={() => setCriar(false)} onSaved={() => { setCriar(false); void carregar() }} />}
       {editar && <EditarPapel membro={editar} onClose={() => setEditar(null)} onSaved={() => { setEditar(null); void carregar() }} />}
     </div>
   )
@@ -146,6 +149,33 @@ function ConvidarLink({ onClose }: { onClose: () => void }) {
           <Foot><button className="ga-btn" style={{ width: 'auto' }} onClick={onClose}>Concluir</button></Foot>
         </>
       )}
+    </Modal>
+  )
+}
+function CriarUsuario({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const { org } = useAuth(); const toast = useToast()
+  const [nome, setNome] = useState(''); const [email, setEmail] = useState(''); const [senha, setSenha] = useState('')
+  const [papel, setPapel] = useState<AppRole>('visualizador'); const [busy, setBusy] = useState(false)
+  async function salvar() {
+    if (!org) return
+    if (!email.trim() || !senha) return toast('Informe e-mail e senha.', true)
+    if (senha.length < 6) return toast('A senha precisa de ao menos 6 caracteres.', true)
+    setBusy(true)
+    const { data, error } = await sb.functions.invoke('criar-usuario', { body: { org_id: org.id, nome: nome.trim(), email: email.trim(), senha, role: papel } })
+    setBusy(false)
+    const d = data as { ok?: boolean; error?: string } | null
+    if (d?.error) return toast(d.error, true)
+    if (error || !d?.ok) return toast('Não foi possível criar o usuário.', true)
+    toast('Usuário criado e vinculado.'); onSaved()
+  }
+  return (
+    <Modal title="Criar usuário" onClose={onClose}>
+      <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>Cria uma conta nova já com acesso a <b>{org?.nome}</b>. Passe o e-mail e a senha para a pessoa — ela pode trocar depois em “Meu perfil”.</p>
+      <Field label="Nome"><input style={inp} value={nome} onChange={(e) => setNome(e.target.value)} /></Field>
+      <Field label="E-mail *"><input style={inp} type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+      <Field label="Senha provisória * (mín. 6)"><PasswordInput value={senha} onChange={(e) => setSenha(e.target.value)} /></Field>
+      <Field label="Papel"><select style={inp} value={papel} onChange={(e) => setPapel(e.target.value as AppRole)}>{PAPEIS.map((p) => <option key={p} value={p}>{ROTULO[p]}</option>)}</select></Field>
+      <Foot><BtnGhost onClick={onClose}>Cancelar</BtnGhost><button className="ga-btn" style={{ width: 'auto' }} disabled={busy} onClick={() => void salvar()}>{busy ? 'Criando…' : 'Criar usuário'}</button></Foot>
     </Modal>
   )
 }
