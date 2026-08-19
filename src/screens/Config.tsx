@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import { BtnSm, Field, errMsg, inp, useToast } from '../ui/kit'
-
-const APP_VERSION = '0.5.0'
+import { VERSAO_ATUAL as APP_VERSION } from '../lib/novidades'
 
 export default function Config() {
   const { org, role, reload } = useAuth()
