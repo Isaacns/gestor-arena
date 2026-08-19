@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type JSX } from
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { sb } from './lib/supabase'
 import { FocusCtx, type Foco } from './lib/focus'
+import Novidades from './ui/Novidades'
 import { ToastHost } from './ui/kit'
 import { Logo, LogoMark } from './ui/Logo'
 import { Icon } from './ui/icons'
@@ -306,6 +307,7 @@ function Shell() {
             <div className="ga-topbar-org ga-hide-mob"><OrgSwitcher /></div>
             <GlobalSearch />
             <div style={{ flex: 1 }} />
+            <Novidades />
             <Notificacoes />
             <UserMenu onPerfil={() => setPerfil(true)} onLock={() => setLocked(true)} />
           </header>
