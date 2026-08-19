@@ -3,7 +3,7 @@ import { sb } from '../lib/supabase'
 import { useAuth } from '../auth/AuthContext'
 import { BtnSm, Field, errMsg, inp, useToast } from '../ui/kit'
 
-const APP_VERSION = '0.3.0'
+const APP_VERSION = '0.4.0'
 
 export default function Config() {
   const { org, role, reload } = useAuth()

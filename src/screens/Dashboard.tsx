@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { sb } from '../lib/supabase'
 import type { AgendaQuadra, AgendaReserva, Vinculo } from '../lib/database.types'
@@ -93,17 +93,17 @@ export default function Dashboard() {
       <div className="ga-kpis">
         {ehArena ? (
           <>
-            <Kpi ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? brl(receita) : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
-            <Kpi ico="🎯" label="Ocupação média" value={`${ocupPct}%`} hint="hoje" tone="ok" />
-            <Kpi ico="📅" label="Reservas hoje" value={carregando ? '…' : reservas.length} hint={`${quadras.length} quadra(s)`} />
-            <Kpi ico="⚠️" label="Pendências" value={pendentes.length} hint={pendentes.length ? 'Ver abaixo' : 'tudo em dia'} tone={pendentes.length ? 'warn' : undefined} />
+            <Kpi delay={0} ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? <Num value={receita} format={brl} /> : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
+            <Kpi delay={60} ico="🎯" label="Ocupação média" value={<Num value={ocupPct} format={(n) => `${Math.round(n)}%`} />} hint="hoje" tone="ok" />
+            <Kpi delay={120} ico="📅" label="Reservas hoje" value={carregando ? '…' : <Num value={reservas.length} />} hint={`${quadras.length} quadra(s)`} />
+            <Kpi delay={180} ico="⚠️" label="Pendências" value={<Num value={pendentes.length} />} hint={pendentes.length ? 'Ver abaixo' : 'tudo em dia'} tone={pendentes.length ? 'warn' : undefined} />
           </>
         ) : (
           <>
-            <Kpi ico="🎓" label="Alunos ativos" value={alunos ?? '…'} />
-            <Kpi ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? brl(receita) : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
-            <Kpi ico="⏰" label="Em atraso" value={podeFin ? (atraso ?? '…') : '—'} hint={podeFin ? (atraso ? 'mensalidade(s) vencida(s)' : 'em dia') : 'sem acesso'} tone={atraso ? 'warn' : undefined} />
-            <Kpi ico="🏐" label="Turmas" value={turmas ?? '…'} />
+            <Kpi delay={0} ico="🎓" label="Alunos ativos" value={alunos != null ? <Num value={alunos} /> : '…'} />
+            <Kpi delay={60} ico="💰" label="Receita do mês" value={podeFin ? (receita != null ? <Num value={receita} format={brl} /> : '…') : '—'} hint={podeFin ? 'recebido no mês' : 'sem acesso'} tone="ok" />
+            <Kpi delay={120} ico="⏰" label="Em atraso" value={podeFin ? (atraso != null ? <Num value={atraso} /> : '…') : '—'} hint={podeFin ? (atraso ? 'mensalidade(s) vencida(s)' : 'em dia') : 'sem acesso'} tone={atraso ? 'warn' : undefined} />
+            <Kpi delay={180} ico="🏐" label="Turmas" value={turmas != null ? <Num value={turmas} /> : '…'} />
           </>
         )}
       </div>
@@ -148,9 +148,9 @@ export default function Dashboard() {
         <div className="ga-card">
           <div className="ga-card-h"><b>Ocupação por horário — hoje</b><span style={{ fontSize: 12, color: 'var(--tx2)' }}>{ocupPct}% média</span></div>
           <div className="ga-bars">
-            {porHora.map((b) => (
+            {porHora.map((b, i) => (
               <div key={b.h} className="ga-bar" title={`${String(b.h).padStart(2, '0')}h · ${Math.round(b.pct * 100)}%`}>
-                <div className="ga-bar-track"><div className="ga-bar-fill" style={{ transform: `scaleY(${Math.max(0.04, b.pct)})`, background: b.pct > 0.66 ? 'var(--ok)' : b.pct > 0.33 ? 'var(--brand)' : 'var(--cyan)' }} /></div>
+                <div className="ga-bar-track"><div className="ga-bar-fill" style={{ transform: `scaleY(${Math.max(0.04, b.pct)})`, transitionDelay: `${i * 30}ms`, background: b.pct > 0.66 ? 'var(--ok)' : b.pct > 0.33 ? 'var(--brand)' : 'var(--cyan)' }} /></div>
                 <span className="ga-bar-x">{String(b.h).padStart(2, '0')}</span>
               </div>
             ))}
@@ -164,10 +164,45 @@ export default function Dashboard() {
 
 const muted: React.CSSProperties = { fontSize: 13, color: 'var(--tx2)', padding: '10px 2px' }
 
-function Kpi({ ico, label, value, hint, tone }: { ico: string; label: string; value: number | string; hint?: string; tone?: 'brand' | 'ok' | 'warn' }) {
+// Movimento vivo (§20): números-chave contam até o valor. Respeita reduced-motion.
+function usePrefersReducedMotion() {
+  const [reduzido, setReduzido] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useEffect(() => {
+    const m = matchMedia('(prefers-reduced-motion: reduce)')
+    const h = () => setReduzido(m.matches)
+    m.addEventListener('change', h)
+    return () => m.removeEventListener('change', h)
+  }, [])
+  return reduzido
+}
+
+function Num({ value, format = (n) => String(Math.round(n)), duration = 700 }: { value: number; format?: (n: number) => string; duration?: number }) {
+  const reduzido = usePrefersReducedMotion()
+  const [disp, setDisp] = useState(0)
+  const deRef = useRef(0)
+  useEffect(() => {
+    if (reduzido || value === deRef.current) { setDisp(value); deRef.current = value; return }
+    const de = deRef.current, ate = value, t0 = performance.now()
+    let raf = 0
+    const passo = (t: number) => {
+      const p = Math.min(1, (t - t0) / duration)
+      const e = 1 - Math.pow(1 - p, 3) // ease-out cúbico
+      setDisp(de + (ate - de) * e)
+      if (p < 1) raf = requestAnimationFrame(passo)
+      else { deRef.current = ate; setDisp(ate) }
+    }
+    raf = requestAnimationFrame(passo)
+    return () => cancelAnimationFrame(raf)
+  }, [value, duration, reduzido])
+  return <>{format(disp)}</>
+}
+
+function Kpi({ ico, label, value, hint, tone, delay }: { ico: string; label: string; value: React.ReactNode; hint?: string; tone?: 'brand' | 'ok' | 'warn'; delay?: number }) {
   const cor = tone === 'ok' ? 'var(--ok)' : tone === 'warn' ? 'var(--warn)' : tone === 'brand' ? 'var(--brand)' : 'var(--tx3)'
+  // entrada fade+rise com stagger (o reduced-motion global no index.css zera a duração)
+  const entrada = delay != null ? { animation: 'ga-enter var(--mo-enter) var(--ease-brand) both', animationDelay: `${delay}ms` } : undefined
   return (
-    <div className="ga-card ga-kpi">
+    <div className="ga-card ga-kpi" style={entrada}>
       <div className="ga-kpi-top"><span style={{ fontSize: 12, color: 'var(--tx2)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{label}</span><span aria-hidden style={{ fontSize: 16 }}>{ico}</span></div>
       <div style={{ fontSize: 30, fontWeight: 300, lineHeight: 1.1 }}>{value}</div>
       {hint && <div style={{ fontSize: 12, color: cor, marginTop: 2 }}>{hint}</div>}
